@@ -1,0 +1,115 @@
+:root {
+  --color-primary: #00f0ff; /* Sci-fi Cyan */
+  --color-secondary: #00ff41; /* Radar Green */
+  --color-alert: #ff2a2a; /* Warning Red */
+  --color-warning: #ffb700; /* Amber */
+  --color-bg-dark: #050510; /* Deep Space/Navy */
+  --color-panel-bg: rgba(10, 16, 30, 0.85);
+  --glass-border: 1px solid rgba(0, 240, 255, 0.3);
+  --scan-line-color: rgba(0, 240, 255, 0.1);
+  
+  --font-mono: 'Courier New', monospace; /* Fallback, would fetch Orbitron if possible */
+  --font-ui: system-ui, -apple-system, sans-serif;
+  
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+}
+
+body {
+  background-color: var(--color-bg-dark);
+  color: var(--color-primary);
+  font-family: var(--font-ui);
+  margin: 0;
+  overflow: hidden; /* App like feel */
+}
+
+/* Utilities */
+.military-panel {
+  background: var(--color-panel-bg);
+  border: var(--glass-border);
+  backdrop-filter: blur(8px);
+  border-radius: 4px;
+  position: relative;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+}
+
+.military-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+}
+
+.military-panel::after {
+  content: '';
+  position: absolute;
+  bottom: 0; right: 0; width: 20px; height: 2px;
+  background: var(--color-primary);
+}
+
+.hud-grid-bg {
+  background-image: 
+    linear-gradient(var(--scan-line-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--scan-line-color) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.text-glow {
+  text-shadow: 0 0 5px var(--color-primary);
+}
+
+.text-alert {
+  color: var(--color-alert);
+  text-shadow: 0 0 5px var(--color-alert);
+}
+
+.text-mono {
+  font-family: var(--font-mono);
+  letter-spacing: 1px;
+}
+
+/* Animations */
+@keyframes scan {
+  0% { top: 0%; opacity: 0; }
+  50% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.scan-overlay::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 10px;
+  background: linear-gradient(to bottom, transparent, var(--color-primary), transparent);
+  opacity: 0.1;
+  animation: scan 3s linear infinite;
+  pointer-events: none;
+}
+
+/* Button Styles */
+.btn-military {
+  background: transparent;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  padding: 8px 16px;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  background: linear-gradient(45deg, transparent 5%, var(--color-primary) 5%, var(--color-primary) 10%, transparent 10%, transparent 90%, var(--color-primary) 90%, var(--color-primary) 95%, transparent 95%);
+  transition: all 0.3s;
+}
+
+.btn-military:hover {
+  background-color: rgba(0, 240, 255, 0.1);
+  box-shadow: 0 0 10px var(--color-primary);
+}
+
+.btn-alert {
+  border-color: var(--color-alert);
+  color: var(--color-alert);
+}
+
+.btn-alert:hover {
+  background-color: rgba(255, 42, 42, 0.1);
+  box-shadow: 0 0 10px var(--color-alert);
+}
