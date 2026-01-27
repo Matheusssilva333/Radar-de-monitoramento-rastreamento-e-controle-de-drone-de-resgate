@@ -1,6 +1,5 @@
 # React app
 aigis-uav-system/node_modules/
-aigis-uav-system/dist/
 aigis-uav-system/dist-ssr/
 aigis-uav-system/*.local
 
@@ -18,5 +17,4 @@ venv/
 node_modules/
 .DS_Store
 .vscode/
-dist/
 build/
