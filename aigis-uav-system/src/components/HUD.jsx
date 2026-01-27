@@ -104,7 +104,7 @@ export default function HUD({ telemetry }) {
                 <div className="ai-feed-container">
                     <div className="ai-header">
                         <Zap size={14} className="flash-green" />
-                        <span>GEMINI-3 TACTICAL REASONING</span>
+                        <span>GEMINI-3 FLASH TACTICAL REASONING</span>
                     </div>
                     <div className="ai-message">
                         {ai_alert}

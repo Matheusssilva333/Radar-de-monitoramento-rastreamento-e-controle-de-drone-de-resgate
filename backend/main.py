@@ -37,7 +37,7 @@ class TacticalAIEngine:
         try:
             prompt = f"Status: {status['state']}, Bat: {status['battery']}%, Alt: {status['altitude']}m. Insight?"
             response = await asyncio.to_thread(self.chat.send_message, self.system_prompt + "\n" + prompt)
-            return f"GEMINI-1.5 // {response.text.strip().upper()}"
+            return f"GEMINI-3 FLASH // {response.text.strip().upper()}"
         except Exception as e:
             print(f"[AI ERROR] {e}")
             return "AIGIS // AI LINK UNSTABLE"
@@ -90,11 +90,11 @@ class AIGISystemHAL:
         if scenario_name == "rescue":
             self.status = "SEARCHING"
             self.target_wp = {"x": 25, "z": 20}
-            self.last_ai_msg = "GEMINI-3 PRO ⚡ // REASONING: Optimal flight path identified. Sector Alpha-4 priority high. Navigating..."
+            self.last_ai_msg = "GEMINI-3 FLASH ⚡ // REASONING: Optimal flight path identified. Sector Alpha-4 priority high. Navigating..."
         elif scenario_name == "emergency":
             self.status = "EMERGENCY"
             self.battery = 15.0
-            self.last_ai_msg = "GEMINI-3 PRO ⚡ // ALERT: Critical power depletion. Protocol 412: Emergency descent initiated."
+            self.last_ai_msg = "GEMINI-3 FLASH ⚡ // ALERT: Critical power depletion. Protocol 412: Emergency descent initiated."
         elif scenario_name == "reset":
             self.sim_pos = {"x": 0, "y": 5, "z": 0}
             self.status = "IDLE"
@@ -148,7 +148,7 @@ class AIGISystemHAL:
             dist = ((self.sim_pos["x"] - target["x"])**2 + (self.sim_pos["z"] - target["z"])**2)**0.5
             if dist < 8 and not target["detected"]:
                 target["detected"] = True
-                self.last_ai_msg = f"GEMINI-3 PRO ⚡ // THINKING: Humanoid heat signature detected. Probability 98%. Flagging Sector {target['id']} as 'STABLE RESCUE'."
+                self.last_ai_msg = f"GEMINI-3 FLASH ⚡ // THINKING: Humanoid heat signature detected. Probability 98%. Flagging Sector {target['id']} as 'STABLE RESCUE'."
 
     def get_telemetry(self):
         # Aerospace-grade health diagnostics
