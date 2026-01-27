@@ -88,13 +88,13 @@ export default function HUD({ droneStatus, aiMessages, position }) {
 
                 <div className="glass-panel" style={{ padding: '1.2rem', width: '350px' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
-                        <TelemetryItem icon={<Ruler size={14} />} label="ALTITUDE" value={`${droneStatus.altitude.toFixed(1)}m`} />
-                        <TelemetryItem icon={<Wind size={14} />} label="VELOCITY" value={`${droneStatus.velocity}km/h`} />
-                        <TelemetryItem icon={<Target size={14} />} label="POS_X" value={position.x.toFixed(2)} />
-                        <TelemetryItem icon={<Target size={14} />} label="POS_Z" value={position.z.toFixed(2)} />
+                        <TelemetryItem icon={<Ruler size={14} />} label="ALTITUDE" value={`${(droneStatus.altitude || 0).toFixed(1)}m`} />
+                        <TelemetryItem icon={<Wind size={14} />} label="VELOCITY" value={`${(droneStatus.velocity || 0).toFixed(1)}km/h`} />
+                        <TelemetryItem icon={<Target size={14} />} label="POS_X" value={(position?.x || 0).toFixed(2)} />
+                        <TelemetryItem icon={<Target size={14} />} label="POS_Z" value={(position?.z || 0).toFixed(2)} />
                     </div>
                     <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', fontSize: '0.7rem', opacity: 0.6, fontFamily: 'JetBrains Mono' }}>
-                        MT: {Math.floor(droneStatus.mission_time / 60)}m {Math.floor(droneStatus.mission_time % 60)}s
+                        MT: {Math.floor((droneStatus.mission_time || 0) / 60)}m {Math.floor((droneStatus.mission_time || 0) % 60)}s
                     </div>
                 </div>
             </div>

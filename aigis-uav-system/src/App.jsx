@@ -27,21 +27,24 @@ function App() {
       const data = JSON.parse(event.data)
       setTelemetry(data)
 
-      // If there's a new AI alert, add it to logs
-      if (data.status.ai_alert && !aiMessages.includes(data.status.ai_alert)) {
-        setAiMessages(prev => [data.status.ai_alert, ...prev].slice(0, 15))
+      // Stable AI Alert Handler
+      if (data.status?.ai_alert) {
+        setAiMessages(prev => {
+          if (prev[0] === data.status.ai_alert) return prev
+          return [data.status.ai_alert, ...prev].slice(0, 15)
+        })
       }
     }
 
     ws.current.onerror = (error) => {
       console.error("WebSocket Error:", error)
-      setAiMessages(prev => ["ERROR: Telemetry link lost. Retrying...", ...prev].slice(0, 10))
+      setAiMessages(prev => ["ERROR: Telemetry link unstable.", ...prev].slice(0, 10))
     }
 
     return () => {
       if (ws.current) ws.current.close()
     }
-  }, [aiMessages])
+  }, []) // Connection is established only ONCE
 
   const handleCommand = async (command) => {
     try {
