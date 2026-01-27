@@ -118,6 +118,7 @@ function App() {
       <Radar
         dronePosition={telemetry.position}
         targets={telemetry.targets}
+        state={telemetry.status.state}
       />
 
       <HUD telemetry={telemetry} />

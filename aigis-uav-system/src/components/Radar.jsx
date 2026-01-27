@@ -3,36 +3,37 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, Grid, Float, Sphere, MeshDistortMaterial, Trail, Points, PointMaterial, Line, Html } from '@react-three/drei'
 import * as THREE from 'three'
 
-function Terrain() {
+function Terrain({ state }) {
   const mesh = useRef()
 
-  // Create a stylized low-poly terrain as requested
+  // Dynamic tactical terrain
   const geometry = useMemo(() => {
-    // Reduced segments for that low-poly visual from the user image
-    const geo = new THREE.PlaneGeometry(120, 120, 32, 32)
+    const segments = 32
+    const geo = new THREE.PlaneGeometry(120, 120, segments, segments)
     const vertices = geo.attributes.position.array
+
+    // Use the state as a seed for different terrain generation
+    const seed = state === 'SCANNING' ? Math.random() : 0.5
+
     for (let i = 0; i < vertices.length; i += 3) {
       const x = vertices[i]
       const y = vertices[i + 1]
 
-      // More organic noise using multiple frequencies
       const height =
-        Math.sin(x * 0.08) * Math.cos(y * 0.08) * 4 +
-        Math.sin(x * 0.2) * Math.sin(y * 0.2) * 1.5 +
-        (Math.random() - 0.5) * 0.2; // Tiny bit of jitter for that raw look
+        Math.sin(x * 0.08 + seed) * Math.cos(y * 0.08 + seed) * 4 +
+        Math.sin(x * 0.2) * Math.sin(y * 0.2) * 1.5;
 
       vertices[i + 2] = height
     }
     geo.computeVertexNormals()
     return geo
-  }, [])
+  }, [state === 'SCANNING']) // Regenerate purely on scanning trigger
 
   return (
     <group rotation={[-Math.PI / 2, 0, 0]} position={[0, -5, 0]}>
-      {/* Solid Surface with Flat Shading */}
       <mesh geometry={geometry}>
         <meshStandardMaterial
-          color="#ffffff"
+          color={state === 'EMERGENCY' ? '#301010' : '#ffffff'}
           flatShading={true}
           transparent
           opacity={0.8}
@@ -41,10 +42,9 @@ function Terrain() {
         />
       </mesh>
 
-      {/* Tactical Wireframe Overlay */}
       <mesh geometry={geometry} position={[0, 0, 0.05]}>
         <meshBasicMaterial
-          color="#00f2ff"
+          color={state === 'SCANNING' ? "#00ffaa" : "#00f2ff"}
           wireframe
           transparent
           opacity={0.2}
@@ -54,23 +54,30 @@ function Terrain() {
   )
 }
 
-function Scene({ dronePosition, targets }) {
+function Scene({ dronePosition, targets, state }) {
   const scannerRef = useRef()
 
-  useFrame((state) => {
+  useFrame((state_frame) => {
     if (scannerRef.current) {
       scannerRef.current.rotation.y += 0.015
+      // Pulsing scale for better visibility during scan
+      if (state === 'SCANNING' || state === 'SEARCHING') {
+        const s = 1 + Math.sin(state_frame.clock.elapsedTime * 4) * 0.05
+        scannerRef.current.scale.set(s, s, s)
+      } else {
+        scannerRef.current.scale.set(1, 1, 1) // Reset scale when not scanning/searching
+      }
     }
   })
 
   return (
     <>
       <color attach="background" args={['#030508']} />
-      <ambientLight intensity={0.2} />
+      <ambientLight intensity={0.4} />
       <pointLight position={[10, 20, 10]} intensity={2} color="#00f2ff" />
       <spotLight position={[0, 50, 0]} angle={0.5} penumbra={1} intensity={2} castShadow />
 
-      <Terrain />
+      <Terrain state={state} />
 
       {/* Radar Main Grid */}
       <Grid
@@ -78,7 +85,7 @@ function Scene({ dronePosition, targets }) {
         fadeDistance={100}
         fadeStrength={10}
         sectionSize={5}
-        sectionColor="#00f2ff"
+        sectionColor={state === 'EMERGENCY' ? "#ff0000" : "#00f2ff"}
         sectionThickness={1}
         cellSize={1}
         cellColor="#004455"
@@ -90,35 +97,35 @@ function Scene({ dronePosition, targets }) {
       <mesh ref={scannerRef} rotation={[-Math.PI / 2, 0, 0]} position={[dronePosition.x, 0.1, dronePosition.z]}>
         <circleGeometry args={[15, 64]} />
         <meshBasicMaterial
-          color="#00f2ff"
+          color={state === 'SCANNING' ? "#00ffaa" : "#00f2ff"}
           transparent
-          opacity={0.03}
+          opacity={0.05}
           side={THREE.DoubleSide}
         />
         {/* Border ring */}
         <mesh rotation={[0, 0, 0]}>
           <ringGeometry args={[14.8, 15, 64]} />
-          <meshBasicMaterial color="#00f2ff" transparent opacity={0.2} />
+          <meshBasicMaterial color={state === 'SCANNING' ? "#00ffaa" : "#00f2ff"} transparent opacity={0.2} />
         </mesh>
       </mesh>
 
       {/* Drone with Trail */}
       <Trail
         width={1.5}
-        length={10}
-        color={'#00f2ff'}
+        length={15}
+        color={state === 'EMERGENCY' ? '#ff0000' : '#00f2ff'}
         attenuation={(t) => t * t}
       >
-        <Float speed={2} rotationIntensity={1} floatIntensity={1}>
+        <Float speed={state === 'FLYING' ? 4 : 2} rotationIntensity={1} floatIntensity={1}>
           <mesh position={[dronePosition.x, dronePosition.y / 20, dronePosition.z]}>
-            <octahedronGeometry args={[0.4, 0]} />
+            <octahedronGeometry args={[0.5, 0]} />
             <meshStandardMaterial
               color="#ffffff"
-              emissive="#00f2ff"
+              emissive={state === 'EMERGENCY' ? '#ff0000' : '#00f2ff'}
               emissiveIntensity={5}
             />
 
-            <pointLight color="#00f2ff" intensity={5} distance={10} />
+            <pointLight color={state === 'EMERGENCY' ? '#ff0000' : '#00f2ff'} intensity={5} distance={10} />
 
             {/* Visual altitude connector */}
             <mesh position={[0, -dronePosition.y / 40, 0]}>
@@ -133,17 +140,17 @@ function Scene({ dronePosition, targets }) {
       {targets.map((target) => (
         <group key={target.id} position={[target.x, -1.5, target.z]}>
           <Sphere args={[target.detected ? 0.3 : 0.15, 16, 16]}>
-            <meshBasicMaterial color={target.detected ? (target.priority === 'CRITICAL' ? "#ff0000" : "#ff2e63") : "#444"} transparent opacity={0.8} />
+            <meshBasicMaterial color={target.detected ? (target.priority === 'CRITICAL' ? "#ff0000" : "#ffcc00") : "#222"} transparent opacity={0.8} />
           </Sphere>
 
           {target.detected && (
             <>
-              <pointLight color="#ff2e63" intensity={2} distance={5} />
+              <pointLight color="#ffcc00" intensity={2} distance={5} />
 
               {/* Tactical Connection Line */}
               <Line
                 points={[[0, 0, 0], [dronePosition.x - target.x, (dronePosition.y / 20) + 1.5, dronePosition.z - target.z]]}
-                color="#ff2e63"
+                color={target.priority === 'CRITICAL' ? "#ff0000" : "#ffcc00"}
                 lineWidth={1}
                 transparent
                 opacity={0.3}
@@ -184,12 +191,12 @@ function Scene({ dronePosition, targets }) {
   )
 }
 
-export default function Radar({ dronePosition, targets }) {
+export default function Radar({ dronePosition, targets, state }) {
   return (
     <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, zIndex: 0 }}>
-      <Canvas shadows camera={{ position: [20, 20, 20], fov: 45 }}>
-        <Scene dronePosition={dronePosition} targets={targets || []} />
-        <fog attach="fog" args={['#030508', 30, 90]} />
+      <Canvas shadows camera={{ position: [25, 25, 25], fov: 45 }}>
+        <Scene dronePosition={dronePosition} targets={targets || []} state={state} />
+        <fog attach="fog" args={['#030508', 30, 100]} />
       </Canvas>
     </div>
   )

@@ -127,7 +127,7 @@ class AIGISystemHAL:
         self.status = hw_telemetry['mode']
 
     def _update_sim(self):
-        if self.status in ["FLYING", "RETURNING", "SEARCHING"]:
+        if self.status in ["FLYING", "RETURNING", "SEARCHING", "SCANNING"]:
             # Move towards target waypoint if set
             if self.target_wp:
                 dx = self.target_wp["x"] - self.sim_pos["x"]
@@ -189,11 +189,27 @@ async def get_status():
 @app.post("/api/command/{cmd}")
 async def send_command(cmd: str):
     if not hal.simulation_mode: hal.hw_driver.send_command(cmd)
-    if cmd == "takeoff": hal.status = "FLYING"
-    elif cmd == "land": hal.status = "LANDED"
-    elif cmd == "rtl": hal.status = "RETURNING"
-    elif cmd == "scan": hal.status = "SEARCHING"
-    return {"status": "ACK", "drone_state": hal.status}
+    if cmd == "takeoff": 
+        hal.status = "FLYING"
+        hal.last_ai_msg = "GEMINI-3 FLASH // PROTOCOL 101: Initializing vertical ascent. Stabilizing at mission altitude."
+    elif cmd == "land": 
+        hal.status = "LANDED"
+        hal.last_ai_msg = "GEMINI-3 FLASH // PROTOCOL 102: Landing sequence engaged. Descending to stable surface."
+    elif cmd == "rtl": 
+        hal.status = "RETURNING"
+        hal.last_ai_msg = "GEMINI-3 FLASH // PROTOCOL 103: Return to Launch initiated. Recalculating path."
+    elif cmd == "scan": 
+        hal.status = "SEARCHING"
+        hal.last_ai_msg = "GEMINI-3 FLASH // PROTOCOL 104: Broad-spectrum thermal sweep active. Monitoring Sector Alpha."
+    elif cmd == "mission":
+        hal.status = "FLYING"
+        hal.last_ai_msg = "GEMINI-3 FLASH // PROTOCOL 105: Mission parameters updated. Optimizing trajectory for search corridor."
+    elif cmd == "emergency":
+        hal.status = "EMERGENCY"
+        hal.battery = 15.0
+        hal.last_ai_msg = "GEMINI-3 FLASH // ALERT: Manual emergency override detected. Critical recovery pattern active."
+        
+    return {"status": "ACK", "drone_state": hal.status, "ai_msg": hal.last_ai_msg}
 
 @app.post("/api/scenario/{name}")
 async def set_scenario(name: str):
