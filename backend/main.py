@@ -95,6 +95,9 @@ class AIGISystemHAL:
             self.status = "EMERGENCY"
             self.battery = 15.0
             self.last_ai_msg = "GEMINI-3 FLASH ⚡ // ALERT: Critical power depletion. Protocol 412: Emergency descent initiated."
+        elif scenario_name == "mapping":
+            self.status = "SCANNING"
+            self.last_ai_msg = "GEMINI-3 FLASH ⚡ // 3D MAPPING: Point cloud data received. Generating tactical surface mesh... Terrain model complete."
         elif scenario_name == "reset":
             self.sim_pos = {"x": 0, "y": 5, "z": 0}
             self.status = "IDLE"

@@ -57,6 +57,7 @@ function App() {
       const scenarioMsgs = {
         'rescue': "SCENARIO_INJECT: Initiating Rescue Search Pattern.",
         'emergency': "SCENARIO_INJECT: Warning - Simulated Power Plant Anomaly.",
+        'mapping': "SCENARIO_INJECT: Executing 3D Terrain Reconstruction Protocol.",
         'reset': "SCENARIO_INJECT: System Hardware Re-initialization."
       }
 

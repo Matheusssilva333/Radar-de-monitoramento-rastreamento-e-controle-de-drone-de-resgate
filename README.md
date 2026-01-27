@@ -9,7 +9,8 @@ AIGIS is a professional-grade UAV (Unmanned Aerial Vehicle) monitoring and contr
 - **Hifi 3D Radar Scene**: A full 3D environment built with Three.js (React-Three-Fiber) featuring procedural terrain, drone flight trails, and tactical target marking.
 - **Dual-Mode Backend**: Supports both **Simulation Mode** (for demonstrations) and **MAVLink Hardware Sync** (for real drone integration via Serial/Network).
 - **Aerospace Grade UI**: A premium HUD (Heads-Up Display) with CRT effects, glassmorphism, and MIL-SPEC telemetry visualizations.
-- **Scenario Injects**: Interactive scenario buttons to demonstrate AI behavior under rescue or emergency conditions.
+- **Tactical 3D Terrain Reconstruction**: Real-time generation of surface models from simulated point-cloud data, providing a high-fidelity topographical view for mission planning.
+- **Scenario Injects**: Interactive scenario buttons to demonstrate AI behavior under rescue, mapping, or emergency conditions.
 
 ## 🛠️ Tech Stack
 

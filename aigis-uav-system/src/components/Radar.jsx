@@ -6,32 +6,51 @@ import * as THREE from 'three'
 function Terrain() {
   const mesh = useRef()
 
-  // Create a stylized hilly terrain
+  // Create a stylized low-poly terrain as requested
   const geometry = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(100, 100, 50, 50)
+    // Reduced segments for that low-poly visual from the user image
+    const geo = new THREE.PlaneGeometry(120, 120, 32, 32)
     const vertices = geo.attributes.position.array
     for (let i = 0; i < vertices.length; i += 3) {
       const x = vertices[i]
       const y = vertices[i + 1]
-      // Simplex noise would be better, but this trig-based noise works for a tech look
-      vertices[i + 2] = Math.sin(x * 0.1) * Math.cos(y * 0.1) * 2 +
-        Math.sin(x * 0.5) * 0.5
+
+      // More organic noise using multiple frequencies
+      const height =
+        Math.sin(x * 0.08) * Math.cos(y * 0.08) * 4 +
+        Math.sin(x * 0.2) * Math.sin(y * 0.2) * 1.5 +
+        (Math.random() - 0.5) * 0.2; // Tiny bit of jitter for that raw look
+
+      vertices[i + 2] = height
     }
     geo.computeVertexNormals()
     return geo
   }, [])
 
   return (
-    <mesh ref={mesh} geometry={geometry} rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]}>
-      <meshStandardMaterial
-        color="#050a15"
-        wireframe
-        transparent
-        opacity={0.3}
-        emissive="#00f2ff"
-        emissiveIntensity={0.1}
-      />
-    </mesh>
+    <group rotation={[-Math.PI / 2, 0, 0]} position={[0, -5, 0]}>
+      {/* Solid Surface with Flat Shading */}
+      <mesh geometry={geometry}>
+        <meshStandardMaterial
+          color="#ffffff"
+          flatShading={true}
+          transparent
+          opacity={0.8}
+          metalness={0.2}
+          roughness={0.5}
+        />
+      </mesh>
+
+      {/* Tactical Wireframe Overlay */}
+      <mesh geometry={geometry} position={[0, 0, 0.05]}>
+        <meshBasicMaterial
+          color="#00f2ff"
+          wireframe
+          transparent
+          opacity={0.2}
+        />
+      </mesh>
+    </group>
   )
 }
 

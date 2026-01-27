@@ -13,6 +13,7 @@ export default function ControlPanel({ onCommand, onScenario }) {
     ]
 
     const scenarios = [
+        { label: '3D MAP SCAN', icono: <Map size={18} />, action: 'mapping', color: '#a855f7', desc: 'Generate Terrain Model' },
         { label: 'RESCUE OPS', icono: <Zap size={18} />, action: 'rescue', color: '#00f2ff', desc: 'Sector ALPHA-4 Rescue' },
         { label: 'EMERGENCY', icono: <AlertTriangle size={18} />, action: 'emergency', color: '#ff4d4d', desc: 'Critical Battery Fail' },
         { label: 'RESET', icono: <RefreshCcw size={18} />, action: 'reset', color: '#fff', desc: 'Full System Reboot' },
