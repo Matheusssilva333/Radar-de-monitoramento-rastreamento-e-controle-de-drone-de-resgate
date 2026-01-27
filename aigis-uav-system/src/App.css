@@ -1,14 +1,18 @@
 .app-container {
-  background: radial-gradient(circle at center, #1a1c25 0%, #0a0b10 100%);
+  background: var(--bg);
 }
 
 button {
   all: unset;
 }
 
+.scanning {
+  animation: pulse 1.5s infinite;
+}
+
 @keyframes pulse {
   0% {
-    opacity: 0.5;
+    opacity: 0.3;
   }
 
   50% {
@@ -16,30 +20,24 @@ button {
   }
 
   100% {
-    opacity: 0.5;
-  }
-}
-
-.scanning-line {
-  height: 2px;
-  background: var(--primary);
-  box-shadow: 0 0 15px var(--primary);
-  width: 100%;
-  position: absolute;
-  animation: scan 4s linear infinite;
-}
-
-@keyframes scan {
-  from {
-    top: 0;
-  }
-
-  to {
-    top: 100%;
+    opacity: 0.3;
   }
 }
 
 .hud-container {
-  font-family: 'Inter', monospace;
-  text-transform: uppercase;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.loading {
+  animation: fadeIn 1s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }

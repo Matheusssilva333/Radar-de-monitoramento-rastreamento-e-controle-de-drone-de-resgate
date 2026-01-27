@@ -5,86 +5,98 @@ import ControlPanel from './components/ControlPanel'
 import './App.css'
 
 function App() {
-  const [dronePosition, setDronePosition] = useState({ x: 0, y: 5, z: 0 })
-  const [droneStatus, setDroneStatus] = useState({
-    battery: 98,
-    signal: -45,
-    altitude: 120,
-    velocity: 0,
-    lat: -23.55052,
-    lng: -46.633308
-  })
+  const [telemetry, setTelemetry] = useState(null)
   const [aiMessages, setAiMessages] = useState([
     "System initialized. GEMINI link established.",
     "Awaiting command for search and rescue mission.",
     "Scanning local airspace... Clear."
   ])
+  const ws = useRef(null)
 
-  // Simulation loop for drone "idling" or movement
   useEffect(() => {
-    const interval = setInterval(() => {
-      setDronePosition(prev => ({
-        x: prev.x + (Math.random() - 0.5) * 0.05,
-        y: 5 + Math.sin(Date.now() / 1000) * 0.2, // Hovers slightly
-        z: prev.z + (Math.random() - 0.5) * 0.05
-      }))
+    // Connect to FastAPI WebSocket
+    ws.current = new WebSocket('ws://localhost:8000/ws/telemetry')
 
-      setDroneStatus(prev => ({
-        ...prev,
-        battery: Math.max(0, prev.battery - 0.01),
-        altitude: 120 + Math.sin(Date.now() / 1000) * 2,
-        lat: prev.lat + (Math.random() - 0.5) * 0.00001,
-        lng: prev.lng + (Math.random() - 0.5) * 0.00001
-      }))
-    }, 100)
-
-    return () => clearInterval(interval)
-  }, [])
-
-  const handleCommand = (command) => {
-    let newMessage = ""
-    switch (command) {
-      case 'takeoff':
-        newMessage = "Initiating engine start. Ascent to 120m."
-        setDroneStatus(prev => ({ ...prev, velocity: 15 }))
-        break
-      case 'land':
-        newMessage = "Landing sequence engaged. Finding level terrain."
-        setDroneStatus(prev => ({ ...prev, velocity: 5 }))
-        break
-      case 'rtl':
-        newMessage = "Return to Launch triggered. Reverting via safe corridor."
-        break
-      case 'scan':
-        newMessage = "Gemini Analysis: Potential heat signature detected at Sector 4B."
-        break
-      case 'mission':
-        newMessage = "Uploading rescue waypoint data. Path optimized by AI."
-        break
-      case 'emergency':
-        newMessage = "EMERGENCY PROTOCOL ACTIVE. All systems to manual override."
-        break
-      default:
-        newMessage = `Command ${command} received.`
+    ws.current.onmessage = (event) => {
+      const data = JSON.parse(event.data)
+      setTelemetry(data)
     }
 
-    setAiMessages(prev => [newMessage, ...prev].slice(0, 10))
+    ws.current.onerror = (error) => {
+      console.error("WebSocket Error:", error)
+      setAiMessages(prev => ["ERROR: Telemetry link lost. Retrying...", ...prev].slice(0, 10))
+    }
+
+    return () => {
+      if (ws.current) ws.current.close()
+    }
+  }, [])
+
+  const handleCommand = async (command) => {
+    try {
+      const response = await fetch(`http://localhost:8000/command/${command}`, { method: 'POST' })
+      const data = await response.json()
+      
+      let newMessage = ""
+      switch (command) {
+        case 'takeoff': newMessage = "Initiating engine start. Ascent to safe flight altitude."; break
+        case 'land': newMessage = "Landing sequence engaged. Finding stable terrain."; break
+        case 'rtl': newMessage = "Return to Launch triggered. Reverting via safe corridor."; break
+        case 'scan': newMessage = "Gemini AI: Scanning Sector Alpha for thermal signatures..."; break
+        case 'mission': newMessage = "Mission parameters updated. Path optimization in progress."; break
+        case 'emergency': newMessage = "ATTENTION: EMERGENCY PROTOCOL ACTIVE. RTL INITIATED."; break
+        default: newMessage = `Command ${command} transmitted.`; break
+      }
+      
+      setAiMessages(prev => [newMessage, ...prev].slice(0, 10))
+    } catch (error) {
+      console.error("Command Error:", error)
+      setAiMessages(prev => ["SYSTEM FAIL: Link unstable. Command not transmitted.", ...prev].slice(0, 10))
+    }
+  }
+
+  if (!telemetry) {
+    return (
+      <div className="loading" style={{ 
+        height: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column',
+        justifyContent: 'center', 
+        alignItems: 'center',
+        background: 'var(--bg)',
+        color: 'var(--primary)'
+      }}>
+        <div className="glow-text" style={{ fontSize: '2rem', letterSpacing: '8px' }}>AIGIS TACTICAL</div>
+        <div style={{ marginTop: '20px', fontFamily: 'JetBrains Mono', fontSize: '0.8rem' }}>LINKING TO UAV TELEMETRY...</div>
+      </div>
+    )
   }
 
   return (
     <div className="app-container" style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
-      <Radar dronePosition={dronePosition} />
-      <HUD droneStatus={droneStatus} aiMessages={aiMessages} />
+      <div className="crt-scanline" />
+      
+      <Radar 
+        dronePosition={telemetry.position} 
+        targets={telemetry.targets} 
+      />
+      
+      <HUD 
+        droneStatus={telemetry.status} 
+        aiMessages={aiMessages} 
+        position={telemetry.position}
+      />
+      
       <ControlPanel onCommand={handleCommand} />
 
-      {/* Decorative Overlay */}
+      {/* Decorative Vignette */}
       <div style={{
         position: 'absolute',
         top: 0,
         left: 0,
         width: '100%',
         height: '100%',
-        boxShadow: 'inset 0 0 200px rgba(0,0,0,0.8)',
+        boxShadow: 'inset 0 0 200px rgba(0,0,0,0.9)',
         pointerEvents: 'none',
         zIndex: 5
       }} />

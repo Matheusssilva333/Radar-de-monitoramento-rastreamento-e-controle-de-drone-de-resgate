@@ -1,0 +1,22 @@
+# React app
+aigis-uav-system/node_modules/
+aigis-uav-system/dist/
+aigis-uav-system/dist-ssr/
+aigis-uav-system/*.local
+
+# Python
+backend/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+
+# General
+node_modules/
+.DS_Store
+.vscode/
+dist/
+build/

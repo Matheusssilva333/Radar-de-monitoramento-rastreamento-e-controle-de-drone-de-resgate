@@ -4,459 +4,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIGIS | Tactical 3D Trajectory & Radar</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+    <title>AIGIS | Tactical UAV Command & Control</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;700&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
     <style>
         :root {
             --primary: #00f2ff;
-            --primary-glow: rgba(0, 242, 255, 0.4);
-            --danger: #ff4d4d;
-            --bg: #050608;
-            --panel: rgba(10, 15, 20, 0.85);
-            --grid: rgba(0, 242, 255, 0.05);
+            --bg: #030407;
+            --card: rgba(10, 15, 25, 0.8);
+            --text: #e0faff;
         }
 
-        * {
+        body,
+        html {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
+            height: 100%;
             background-color: var(--bg);
-            color: var(--primary);
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            overflow: hidden;
+        }
+
+        .background-dots {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(rgba(0, 242, 255, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+        }
+
+        .main-hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: radial-gradient(circle at center, rgba(0, 242, 255, 0.05) 0%, transparent 70%);
+        }
+
+        .logo-container {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .logo-text {
+            font-size: 6rem;
+            font-weight: 900;
+            letter-spacing: 15px;
+            margin: 0;
+            background: linear-gradient(180deg, #fff 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 242, 255, 0.3);
+        }
+
+        .tagline {
             font-family: 'JetBrains Mono', monospace;
-            overflow: hidden;
-            height: 100vh;
+            font-size: 1.2rem;
+            letter-spacing: 4px;
+            opacity: 0.8;
+            margin-bottom: 3rem;
         }
 
-        #main-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
+        .portal-grid {
             display: grid;
-            grid-template-columns: 1fr 350px;
-            background: radial-gradient(circle at center, #0a111a 0%, #050608 100%);
+            grid-template-columns: repeat(2, 300px);
+            gap: 2rem;
         }
 
-        /* 3D Viewport */
-        #viewport-3d {
+        .portal-card {
+            background: var(--card);
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            padding: 2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-decoration: none;
+            color: inherit;
             position: relative;
-            border-right: 1px solid var(--grid);
             overflow: hidden;
         }
 
-        canvas {
-            display: block;
+        .portal-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+            background: rgba(0, 242, 255, 0.05);
         }
 
+        .portal-card h3 {
+            font-size: 1.5rem;
+            margin: 0 0 10px 0;
+            color: var(--primary);
+        }
+
+        .portal-card p {
+            font-size: 0.9rem;
+            opacity: 0.6;
+            margin: 0;
+        }
+
+        .badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--primary);
+            color: black;
+            font-size: 0.6rem;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .system-status {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            display: flex;
+            gap: 20px;
+            opacity: 0.5;
+        }
+
+        .status-item span {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* Scanline Effect */
         .crt-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
-                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            background-size: 100% 4px, 3px 100%;
-            pointer-events: none;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
             z-index: 100;
-            opacity: 0.4;
-        }
-
-        /* HUD Elements */
-        .hud-panel {
-            background: var(--panel);
-            border: 1px solid var(--primary-glow);
-            backdrop-filter: blur(8px);
-            padding: 15px;
-            pointer-events: auto;
-        }
-
-        .floating-info {
-            position: absolute;
-            z-index: 10;
-        }
-
-        .top-left {
-            top: 20px;
-            left: 20px;
-        }
-
-        .bottom-left {
-            bottom: 20px;
-            left: 20px;
-            width: 400px;
-        }
-
-        .system-title {
-            font-weight: 800;
-            font-size: 1.2rem;
-            letter-spacing: 5px;
-            text-shadow: 0 0 10px var(--primary-glow);
-        }
-
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            padding: 20px;
-            background: rgba(5, 7, 10, 0.95);
-            border-left: 1px solid var(--primary-glow);
-            z-index: 20;
-        }
-
-        /* Stats */
-        .stat-box {
-            margin-bottom: 20px;
-        }
-
-        .label {
-            font-size: 0.65rem;
-            opacity: 0.6;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .value {
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: white;
-        }
-
-        /* Radar Small */
-        #radar-mini {
-            width: 100%;
-            aspect-ratio: 1;
-            border: 1px solid var(--primary-glow);
-            position: relative;
-            background: rgba(0, 242, 255, 0.02);
-        }
-
-        /* AI Feed */
-        .ai-feed {
-            flex-grow: 1;
-            font-size: 0.75rem;
-            overflow-y: auto;
-            border-top: 1px solid var(--grid);
-            padding-top: 10px;
-        }
-
-        .log-entry {
-            margin-bottom: 8px;
-            padding-left: 8px;
-            border-left: 2px solid var(--primary);
-        }
-
-        .btn {
-            background: transparent;
-            border: 1px solid var(--primary-glow);
-            color: var(--primary);
-            padding: 10px;
-            font-family: inherit;
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: 0.2s;
-            text-align: center;
-            width: 100%;
-            margin-top: 5px;
-        }
-
-        .btn:hover {
-            background: var(--primary-shadow);
-            box-shadow: 0 0 15px var(--primary-glow);
-            color: white;
-        }
-
-        .tag {
-            font-size: 0.6rem;
-            background: var(--primary);
-            color: black;
-            padding: 2px 5px;
-            font-weight: bold;
-            margin-right: 5px;
-        }
-
-        @keyframes pulse {
-            0% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-
-            100% {
-                opacity: 1;
-            }
-        }
-
-        .scanning {
-            animation: pulse 1s infinite;
+            pointer-events: none;
+            opacity: 0.3;
         }
     </style>
 </head>
 
 <body>
     <div class="crt-overlay"></div>
+    <div class="background-dots"></div>
 
-    <div id="main-container">
-        <!-- Area 3D Principal -->
-        <div id="viewport-3d">
-            <canvas id="canvas3d"></canvas>
-
-            <div class="floating-info top-left hud-panel">
-                <div class="system-title">AIGIS // TACTICAL VIEW</div>
-                <div style="font-size: 0.6rem; margin-top: 5px;"><span class="tag">GEMINI 3 FLASH</span> AI PATH
-                    OPTIMIZATION ACTIVE</div>
-            </div>
-
-            <div class="floating-info bottom-left hud-panel">
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
-                    <div>
-                        <div class="label">X-POS</div>
-                        <div id="x-val" class="value">0.00</div>
-                    </div>
-                    <div>
-                        <div class="label">Y-POS</div>
-                        <div id="y-val" class="value">0.00</div>
-                    </div>
-                    <div>
-                        <div class="label">ALT (Z)</div>
-                        <div id="z-val" class="value">120m</div>
-                    </div>
-                </div>
-            </div>
+    <main class="main-hero">
+        <div class="logo-container">
+            <h1 class="logo-text">AIGIS</h1>
+            <div
+                style="position: absolute; bottom: -10px; right: 0; color: var(--primary); font-family: 'JetBrains Mono'; font-size: 0.8rem;">
+                STRATEGIC_SYSTEM</div>
         </div>
 
-        <!-- Sidebar Lateral de Controle -->
-        <div class="sidebar">
-            <div class="stat-box">
-                <div class="label">MISSION TIME</div>
-                <div class="value" id="timer">00:04:12</div>
-            </div>
+        <p class="tagline">UAV RESCUE & TACTICAL MONITORING</p>
 
-            <div class="label">LOCAL RADAR</div>
-            <div id="radar-mini">
-                <canvas id="miniRadarCanvas"></canvas>
-            </div>
+        <div class="portal-grid">
+            <a href="./aigis-uav-system/index.html" class="portal-card">
+                <div class="badge">RECOMENDADO</div>
+                <h3>MODERN HUB</h3>
+                <p>Interface React + Three.js com telemetria via WebSocket e IA tática.</p>
+            </a>
 
-            <div class="label" style="margin-top: 20px;">AI INTELLIGENCE LOG</div>
-            <div id="ai-feed" class="ai-feed">
-                <!-- Logs entry -->
-            </div>
-
-            <div class="controls">
-                <button class="btn" onclick="resetPath()">RECALIBRATE PATH</button>
-                <button class="btn" onclick="toggleSim()">PAUSE SIMULATION</button>
-                <button class="btn" style="border-color: #ff4d4d; color: #ff4d4d;">EMERGENCY RTL</button>
-            </div>
+            <a href="./radar-standalone.html" class="portal-card">
+                <h3>LEGACY RADAR</h3>
+                <p>Visualizador 2D de alta performance para sistemas de baixo recurso.</p>
+            </a>
         </div>
+    </main>
+
+    <div class="system-status">
+        <div class="status-item">CORE_VERSION: <span>3.0.0-PRO</span></div>
+        <div class="status-item">ENCRYPTION: <span>AES-256</span></div>
+        <div class="status-item">AI_UNIT: <span>GEMINI_3_FLASH</span></div>
     </div>
 
     <script>
-        // Configurações Globais
-        const canvas3d = document.getElementById('canvas3d');
-        const ctx3d = canvas3d.getContext('2d');
-        const miniRadar = document.getElementById('miniRadarCanvas');
-        const mctx = miniRadar.getContext('2d');
-
-        let width, height;
-        let dronePath = [];
-        let targets = [
-            { x: 100, y: 100, z: 0, type: 'RESIDUE' },
-            { x: -150, y: 50, z: 10, type: 'CIVILIAN' }
-        ];
-
-        // Drone State
-        let dronePos = { x: 0, y: 0, z: 50 };
-        let angle = 0;
-        let running = true;
-
-        function init() {
-            width = canvas3d.width = document.getElementById('viewport-3d').clientWidth;
-            height = canvas3d.height = document.getElementById('viewport-3d').clientHeight;
-            miniRadar.width = miniRadar.height = document.getElementById('radar-mini').clientWidth;
-        }
-
-        // Projeção 3D simples (Perspective Projection)
-        function project(x, y, z) {
-            const scale = 600;
-            const distance = 400;
-
-            // Rotação da câmera para visualização dinâmica
-            const camAngle = Date.now() * 0.0001;
-            const rx = x * Math.cos(camAngle) - y * Math.sin(camAngle);
-            const ry = x * Math.sin(camAngle) + y * Math.cos(camAngle);
-
-            const factor = scale / (distance + ry);
-            const x2d = rx * factor + width / 2;
-            const y2d = -z * factor + height / 1.5; // Offset vertical para o "chão"
-            return { x: x2d, y: y2d, scale: factor };
-        }
-
-        function draw3D() {
-            if (!running) return requestAnimationFrame(draw3D);
-
-            ctx3d.clearRect(0, 0, width, height);
-
-            // 1. Desenhar Grade (Ground Grid)
-            ctx3d.strokeStyle = 'rgba(0, 242, 255, 0.05)';
-            ctx3d.lineWidth = 1;
-            for (let i = -10; i <= 10; i++) {
-                // Linhas paralelas
-                ctx3d.beginPath();
-                let start = project(i * 50, -500, 0);
-                let end = project(i * 50, 500, 0);
-                ctx3d.moveTo(start.x, start.y);
-                ctx3d.lineTo(end.x, end.y);
-                ctx3d.stroke();
-
-                // Linhas perpendiculares
-                ctx3d.beginPath();
-                start = project(-500, i * 50, 0);
-                end = project(500, i * 50, 0);
-                ctx3d.moveTo(start.x, start.y);
-                ctx3d.lineTo(end.x, end.y);
-                ctx3d.stroke();
-            }
-
-            // 2. Atualizar Posição do Drone (Simulação de Voo)
-            angle += 0.01;
-            dronePos.x = Math.sin(angle) * 150 + Math.cos(angle * 0.5) * 50;
-            dronePos.y = Math.cos(angle * 0.8) * 100;
-            dronePos.z = 80 + Math.sin(angle * 2) * 30; // Altitude variando
-
-            dronePath.push({ ...dronePos });
-            if (dronePath.length > 200) dronePath.shift();
-
-            // 3. Desenhar Trajetória
-            if (dronePath.length > 1) {
-                ctx3d.beginPath();
-                ctx3d.strokeStyle = 'rgba(0, 242, 255, 0.4)';
-                ctx3d.lineWidth = 2;
-                let start = project(dronePath[0].x, dronePath[0].y, dronePath[0].z);
-                ctx3d.moveTo(start.x, start.y);
-
-                for (let i = 1; i < dronePath.length; i++) {
-                    let p = project(dronePath[i].x, dronePath[i].y, dronePath[i].z);
-                    ctx3d.lineTo(p.x, p.y);
-                }
-                ctx3d.stroke();
-
-                // Efeito de brilho na linha
-                ctx3d.shadowBlur = 10;
-                ctx3d.shadowColor = 'var(--primary)';
-                ctx3d.stroke();
-                ctx3d.shadowBlur = 0;
-            }
-
-            // 4. Desenhar Drone (Icone 3D)
-            let p = project(dronePos.x, dronePos.y, dronePos.z);
-
-            // Sombra no chão
-            let shadow = project(dronePos.x, dronePos.y, 0);
-            ctx3d.fillStyle = 'rgba(0, 242, 255, 0.1)';
-            ctx3d.beginPath();
-            ctx3d.ellipse(shadow.x, shadow.y, 20 * shadow.scale, 10 * shadow.scale, 0, 0, Math.PI * 2);
-            ctx3d.fill();
-
-            // Linha vertical de altitude
-            ctx3d.setLineDash([5, 5]);
-            ctx3d.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-            ctx3d.beginPath();
-            ctx3d.moveTo(p.x, p.y);
-            ctx3d.lineTo(shadow.x, shadow.y);
-            ctx3d.stroke();
-            ctx3d.setLineDash([]);
-
-            // Corpo do Drone
-            ctx3d.fillStyle = 'white';
-            ctx3d.beginPath();
-            ctx3d.arc(p.x, p.y, 5 * p.scale, 0, Math.PI * 2);
-            ctx3d.fill();
-
-            ctx3d.strokeStyle = 'var(--primary)';
-            ctx3d.lineWidth = 2;
-            ctx3d.stroke();
-
-            // UI Update
-            document.getElementById('x-val').innerText = dronePos.x.toFixed(2);
-            document.getElementById('y-val').innerText = dronePos.y.toFixed(2);
-            document.getElementById('z-val').innerText = dronePos.z.toFixed(0) + 'm';
-
-            drawMiniRadar();
-            requestAnimationFrame(draw3D);
-        }
-
-        function drawMiniRadar() {
-            const cx = miniRadar.width / 2;
-            const cy = miniRadar.height / 2;
-            const r = miniRadar.width * 0.45;
-
-            mctx.clearRect(0, 0, miniRadar.width, miniRadar.height);
-
-            // Grid Circles
-            mctx.strokeStyle = 'rgba(0, 242, 255, 0.15)';
-            for (let i = 1; i <= 3; i++) {
-                mctx.beginPath();
-                mctx.arc(cx, cy, (r / 3) * i, 0, Math.PI * 2);
-                mctx.stroke();
-            }
-
-            // Sweep
-            const sweepAngle = (Date.now() / 500) % (Math.PI * 2);
-            mctx.beginPath();
-            mctx.moveTo(cx, cy);
-            mctx.arc(cx, cy, r, sweepAngle, sweepAngle + 0.2);
-            mctx.fillStyle = 'rgba(0, 242, 255, 0.2)';
-            mctx.fill();
-
-            // Drone Point
-            const dx = cx + (dronePos.x / 500) * r;
-            const dy = cy + (dronePos.y / 500) * r;
-            mctx.fillStyle = 'var(--primary)';
-            mctx.beginPath();
-            mctx.arc(dx, dy, 3, 0, Math.PI * 2);
-            mctx.fill();
-        }
-
-        // AI Log Logic
-        const logContainer = document.getElementById('ai-feed');
-        const msgs = [
-            "Path adjustment: avoiding obstacle in Sector 9.",
-            "Gemini Intelligence: Thermal signature detected on left flank.",
-            "Signal strength stable. Data downlink 100%.",
-            "Calculating fuel consumption for RTL protocol.",
-            "3D Mapping: Point cloud data being processed..."
-        ];
-
-        function addLog(text) {
-            const div = document.createElement('div');
-            div.className = 'log-entry';
-            div.innerHTML = `<span style="opacity:0.5;font-size:0.6rem;">[${new Date().toLocaleTimeString()}]</span><br>${text}`;
-            logContainer.prepend(div);
-            if (logContainer.children.length > 10) logContainer.lastChild.remove();
-        }
-
-        setInterval(() => {
-            if (Math.random() > 0.7) addLog(msgs[Math.floor(Math.random() * msgs.length)]);
-        }, 3000);
-
-        function resetPath() {
-            dronePath = [];
-            addLog("SYSTEM: Path history cleared. Recalibrating sensors.");
-        }
-
-        function toggleSim() {
-            running = !running;
-            addLog(running ? "SYSTEM: Simulation Resumed" : "SYSTEM: Simulation Paused");
-        }
-
-        window.onresize = init;
-        init();
-        draw3D();
-        addLog("AIGIS TACTICAL BOOT... LINKED TO GEMINI 3 FLASH.");
+        // Simple hover audio or interaction can be added here
+        console.log("AIGIS SYSTEM INITIALIZED");
     </script>
 </body>
 
