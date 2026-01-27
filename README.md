@@ -7,7 +7,7 @@ AIGIS is a professional-grade UAV (Unmanned Aerial Vehicle) monitoring and contr
 
 ## 🚀 Key Features
 
-- **Gemini 3 Flash Tactical Reasoning**: Real-time mission analysis using Gemini 1.5 Flash. The AI evaluates telemetry data and provides tactical insights (e.g., thermal signature validation, power management alerts).
+- **Gemini 3 Flash Tactical Reasoning**: Real-time mission analysis using Gemini 3 Flash. The AI evaluates telemetry data and provides tactical insights (e.g., thermal signature validation, power management alerts).
 - **Hifi 3D Radar Scene**: A full 3D environment built with Three.js (React-Three-Fiber) featuring procedural terrain, drone flight trails, and tactical target marking.
 - **Dual-Mode Backend**: Supports both **Simulation Mode** (for demonstrations) and **MAVLink Hardware Sync** (for real drone integration via Serial/Network).
 - **Aerospace Grade UI**: A premium HUD (Heads-Up Display) with CRT effects, glassmorphism, and MIL-SPEC telemetry visualizations.
