@@ -105,6 +105,8 @@ function App() {
     }
   }
 
+  const [isRoboticMode, setIsRoboticMode] = useState(false)
+
   if (!telemetry) {
     return (
       <div className="loading" style={{
@@ -137,7 +139,31 @@ function App() {
       <ControlPanel
         onCommand={handleCommand}
         onScenario={handleScenario}
+        isRoboticEnabled={isRoboticMode}
+        onToggleRobotic={() => setIsRoboticMode(!isRoboticMode)}
       />
+
+      {isRoboticMode && (
+        <div className="robotic-overlay glass-panel">
+          <div className="robotic-header">
+            <span className="pulse-dot" />
+            DIRECT UAV CONTROL LINK [HARDWARE ADAPTIVE]
+          </div>
+          <div className="robotic-joysticks">
+            <div className="joystick-ring">
+              <div className="joystick-knob" />
+              <div className="joystick-label">THRUST / YAW</div>
+            </div>
+            <div className="joystick-ring">
+              <div className="joystick-knob" />
+              <div className="joystick-label">PITCH / ROLL</div>
+            </div>
+          </div>
+          <div className="robotic-footer">
+            PRECISION TRAJECTORY TRACKING ACTIVE
+          </div>
+        </div>
+      )}
 
       {/* Decorative Vignette */}
       <div style={{

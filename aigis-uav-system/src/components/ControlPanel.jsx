@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Play, Square, Home, AlertTriangle, Crosshair, Zap, Settings, RefreshCcw, Loader2, CheckCircle2, Map } from 'lucide-react'
 
-export default function ControlPanel({ onCommand, onScenario }) {
+export default function ControlPanel({ onCommand, onScenario, isRoboticEnabled, onToggleRobotic }) {
     const [loadingAction, setLoadingAction] = useState(null)
     const [successAction, setSuccessAction] = useState(null)
 
@@ -94,9 +94,19 @@ export default function ControlPanel({ onCommand, onScenario }) {
                     <div className="pulse-green" />
                     <span>ENCRYPTED LINK STABLE</span>
                 </div>
-                <button className="settings-btn">
-                    <Settings size={16} />
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                        className={`robotic-toggle ${isRoboticEnabled ? 'active' : ''}`}
+                        onClick={onToggleRobotic}
+                        title="TOGGLE DIRECT CONTROL"
+                    >
+                        <loader className={isRoboticEnabled ? 'animate-pulse' : ''} size={16} />
+                        <Zap size={16} color={isRoboticEnabled ? "var(--success)" : "currentColor"} />
+                    </button>
+                    <button className="settings-btn">
+                        <Settings size={16} />
+                    </button>
+                </div>
             </div>
         </div>
     )

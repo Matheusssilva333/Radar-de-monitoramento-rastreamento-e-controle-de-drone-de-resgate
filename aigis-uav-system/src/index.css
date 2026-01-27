@@ -581,3 +581,131 @@ body {
   text-align: right;
   width: 50px;
 }
+
+/* Robotic Control Interface */
+.robotic-overlay {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 500px;
+  padding: 1.5rem;
+  z-index: 50;
+  border-top: 2px solid var(--primary);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translate(-50%, 100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+.robotic-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--primary);
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--danger);
+  border-radius: 50%;
+  animation: pulse-red 1s infinite;
+}
+
+@keyframes pulse-red {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7);
+  }
+
+  70% {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 10px rgba(255, 77, 77, 0);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 77, 77, 0);
+  }
+}
+
+.robotic-joysticks {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.joystick-ring {
+  width: 120px;
+  height: 120px;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(0, 242, 255, 0.05) 0%, transparent 70%);
+}
+
+.joystick-knob {
+  width: 40px;
+  height: 40px;
+  background: var(--primary);
+  border-radius: 50%;
+  box-shadow: 0 0 20px var(--primary-glow);
+  cursor: grab;
+}
+
+.joystick-label {
+  position: absolute;
+  bottom: -1.5rem;
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.robotic-footer {
+  font-size: 0.6rem;
+  text-align: center;
+  opacity: 0.5;
+  letter-spacing: 1px;
+}
+
+.robotic-toggle {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  padding: 0.4rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.robotic-toggle.active {
+  background: rgba(0, 242, 255, 0.15);
+  border-color: var(--primary);
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+
+.robotic-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
