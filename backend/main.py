@@ -201,8 +201,6 @@ class AIGISystemHAL:
                 "hardware_link": not self.simulation_mode, "altitude": round(self.sim_pos["y"], 1),
                 "velocity": round(velocity, 1), "health": health
             },
-                "velocity": round(velocity, 1), "health": health
-            },
             "targets": self.targets,
             "logs": self.logs
         }
