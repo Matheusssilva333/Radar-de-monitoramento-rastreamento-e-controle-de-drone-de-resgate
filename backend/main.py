@@ -22,7 +22,7 @@ class TacticalAIEngine:
     def __init__(self):
         self.enabled = GEN_API_KEY is not None
         if self.enabled:
-            self.model = genai.GenerativeModel('gemini-1.5-flash') # Using stable 1.5-flash backend for G3 functionality
+            self.model = genai.GenerativeModel('gemini-2.0-flash') # Using stable 2.0-flash confirmed in logs
             self.chat = self.model.start_chat()
             self.system_prompt = (
                 "You are AIGIS-AI, a tactical search and rescue drone operator assistant. "
@@ -112,6 +112,9 @@ class AIGISystemHAL:
             self.last_ai_msg = "GEMINI-3 FLASH // Mission profile reset. System standby."
 
     async def update(self):
+        # Tick for simulation monitoring
+        if random.random() < 0.01: print(f"[HAL] Tick Update - State: {self.status}")
+        
         if self.simulation_mode:
             self._update_sim()
         else:
@@ -241,13 +244,20 @@ async def set_scenario(name: str):
 @app.websocket("/ws/telemetry")
 async def websocket_telemetry(websocket: WebSocket):
     await websocket.accept()
+    print("[WS] Client Connected")
     try:
         while True:
-            await hal.update()
-            await websocket.send_json(hal.get_telemetry())
-            await asyncio.sleep(0.1) 
+            try:
+                await hal.update()
+                data = hal.get_telemetry()
+                await websocket.send_json(data)
+            except Exception as e:
+                print(f"[WS LOOP ERR] {e}")
+            await asyncio.sleep(0.12) # Adjusted for stability
     except WebSocketDisconnect:
-        pass
+        print("[WS] Client Disconnected")
+    except Exception as e:
+        print(f"[WS FATAL ERR] {e}")
 
 # --- UI & STATIC FILE ROUTES ---
 

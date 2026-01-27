@@ -34,11 +34,10 @@ function App() {
       // console.log("TLM REDV:", data.status.state, data.status.altitude)
       setTelemetry(data)
 
-      // Stable AI Alert Handler
       if (data.status?.ai_alert) {
         setAiMessages(prev => {
-          if (prev[prev.length - 1] === data.status.ai_alert) return prev
-          return [data.status.ai_alert, ...prev].slice(0, 15)
+          if (prev[0] === data.status.ai_alert) return prev
+          return [data.status.ai_alert, ...prev].slice(0, 20)
         })
       }
     }
@@ -49,13 +48,8 @@ function App() {
     }
 
     ws.current.onclose = () => {
-      console.warn("Tactical Link Closed. Attempting Reconnection...")
-      // Reconnect after 3 seconds
-      setTimeout(() => {
-        if (ws.current.readyState === WebSocket.CLOSED) {
-          window.location.reload()
-        }
-      }, 3000)
+      console.warn("Tactical Link Closed.")
+      setAiMessages(prev => ["LINK LOST: Re-establishing...", ...prev].slice(0, 10))
     }
 
     return () => {
