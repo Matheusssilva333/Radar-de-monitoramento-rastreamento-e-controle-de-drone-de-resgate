@@ -17,7 +17,7 @@ function App() {
     // Connect to dynamic WebSocket host
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.host
-    const wsUrl = process.env.NODE_ENV === 'development'
+    const wsUrl = import.meta.env.DEV
       ? 'ws://localhost:8000/ws/telemetry'
       : `${protocol}//${host}/ws/telemetry`
 
@@ -45,7 +45,7 @@ function App() {
 
   const handleCommand = async (command) => {
     try {
-      const apiBase = process.env.NODE_ENV === 'development'
+      const apiBase = import.meta.env.DEV
         ? 'http://localhost:8000/api'
         : `${window.location.origin}/api`
 
