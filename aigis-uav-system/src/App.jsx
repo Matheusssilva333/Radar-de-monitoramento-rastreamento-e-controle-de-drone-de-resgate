@@ -176,7 +176,7 @@ function App() {
   useEffect(() => {
     let interval;
     if (isRoboticMode) {
-      interval = setInterval(sendJoystickUpdate, 150) // 6.6Hz update rate for stability
+      interval = setInterval(sendJoystickUpdate, 80) // 12.5Hz update rate for snappy control
     }
     return () => clearInterval(interval)
   }, [isRoboticMode])

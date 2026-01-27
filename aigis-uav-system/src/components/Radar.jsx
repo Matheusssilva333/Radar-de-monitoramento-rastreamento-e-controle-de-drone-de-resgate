@@ -153,6 +153,8 @@ function DroneModel({ state, position }) {
 
 function Scene({ dronePosition, targets, state }) {
   const scannerRef = useRef()
+  const droneGroupRef = useRef()
+  const currentPos = useRef(new THREE.Vector3(0, 0, 0))
 
   useFrame((state_frame) => {
     if (scannerRef.current) {
@@ -161,6 +163,13 @@ function Scene({ dronePosition, targets, state }) {
         const s = 1 + Math.sin(state_frame.clock.elapsedTime * 4) * 0.05
         scannerRef.current.scale.set(s, s, s)
       }
+    }
+
+    // Advanced Lerp Interpolation: 60FPS visual stability
+    if (droneGroupRef.current) {
+      const targetPos = new THREE.Vector3(dronePosition.x, dronePosition.y / 20, dronePosition.z)
+      droneGroupRef.current.position.lerp(targetPos, 0.12) // Smoothly glide to latest telemetry
+      currentPos.current.copy(droneGroupRef.current.position)
     }
   })
 
@@ -188,19 +197,18 @@ function Scene({ dronePosition, targets, state }) {
       />
 
       {/* UAV Tactical Asset with Trail */}
-      <Trail
-        width={1.2}
-        length={25}
-        color={state === 'EMERGENCY' ? '#ff0000' : '#00f2ff'}
-        attenuation={(t) => t * t}
-      >
-        <Float speed={3} rotationIntensity={0.5} floatIntensity={0.5}>
-          <DroneModel
-            state={state}
-            position={[dronePosition.x, dronePosition.y / 20, dronePosition.z]}
-          />
-        </Float>
-      </Trail>
+      <group ref={droneGroupRef} position={[0, 5, 0]}>
+        <Trail
+          width={1.2}
+          length={25}
+          color={state === 'EMERGENCY' ? '#ff0000' : '#00f2ff'}
+          attenuation={(t) => t * t}
+        >
+          <Float speed={3} rotationIntensity={0.5} floatIntensity={0.5}>
+            <DroneModel state={state} position={[0, 0, 0]} />
+          </Float>
+        </Trail>
+      </group>
 
       {/* Detected Targets */}
       {targets.map((target) => (
@@ -211,7 +219,7 @@ function Scene({ dronePosition, targets, state }) {
 
           {target.detected && (
             <Line
-              points={[[0, 0, 0], [dronePosition.x - target.x, (dronePosition.y / 20) + 2, dronePosition.z - target.z]]}
+              points={[[0, 0, 0], [currentPos.current.x - target.x, currentPos.current.y + 2, currentPos.current.z - target.z]]}
               color="#ffcc00"
               lineWidth={1}
               transparent

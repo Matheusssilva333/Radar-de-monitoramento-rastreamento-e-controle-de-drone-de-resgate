@@ -213,6 +213,18 @@ async def startup_event():
         except Exception as e:
             print(f"[AIGIS] COULD NOT LIST MODELS: {e}")
     await hal.initialize()
+    # Continuous Simulation Clock (Async)
+    asyncio.create_task(simulation_engine_loop())
+
+async def simulation_engine_loop():
+    """Independent High-Frequency Physics Clock (20Hz)"""
+    print("[AIGIS] PHYSICS ENGINE ONLINE [20Hz]")
+    while True:
+        try:
+            await hal.update()
+        except Exception as e:
+            print(f"[PHYSICS ERROR] {e}")
+        await asyncio.sleep(0.05) # 20fps for physics
 
 # --- TACTICAL API & DATA ROUTES ---
 @app.get("/api/status")
@@ -270,10 +282,10 @@ async def websocket_telemetry(websocket: WebSocket):
     try:
         while True:
             try:
-                await hal.update()
+                # Downlink current state only (radio broadcast)
                 data = hal.get_telemetry()
                 await websocket.send_json(data)
-                await asyncio.sleep(0.12)
+                await asyncio.sleep(0.08) # 12.5Hz downlink rate
             except Exception as e:
                 # Silently exit on connection issues, log others
                 estr = str(e).lower()
