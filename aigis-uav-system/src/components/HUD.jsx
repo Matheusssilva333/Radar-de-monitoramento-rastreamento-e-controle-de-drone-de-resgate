@@ -90,11 +90,12 @@ export default function HUD({ droneStatus, aiMessages, position }) {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.2rem' }}>
                         <TelemetryItem icon={<Ruler size={14} />} label="ALTITUDE" value={`${(droneStatus.altitude || 0).toFixed(1)}m`} />
                         <TelemetryItem icon={<Wind size={14} />} label="VELOCITY" value={`${(droneStatus.velocity || 0).toFixed(1)}km/h`} />
-                        <TelemetryItem icon={<Target size={14} />} label="POS_X" value={(position?.x || 0).toFixed(2)} />
-                        <TelemetryItem icon={<Target size={14} />} label="POS_Z" value={(position?.z || 0).toFixed(2)} />
+                        <TelemetryItem icon={<Target size={14} />} label="GPS_FIX" value={droneStatus.health?.gps || "SEARCHING..."} />
+                        <TelemetryItem icon={<Signal size={14} />} label="LINK_HLTH" value={droneStatus.health?.link_uplink || "LINK_OK"} />
                     </div>
-                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', fontSize: '0.7rem', opacity: 0.6, fontFamily: 'JetBrains Mono' }}>
-                        MT: {Math.floor((droneStatus.mission_time || 0) / 60)}m {Math.floor((droneStatus.mission_time || 0) % 60)}s
+                    <div style={{ marginTop: '1rem', paddingTop: '0.8rem', borderTop: '1px solid var(--border)', display: 'grid', gridTemplateColumns: '1fr 1fr', fontSize: '0.6rem' }}>
+                        <div style={{ color: 'var(--success)' }}>IMU: {(droneStatus.health?.imu || "OK")}</div>
+                        <div style={{ color: 'var(--primary)', textAlign: 'right' }}>CPU: {(droneStatus.health?.cpu_load || "5%")}</div>
                     </div>
                 </div>
             </div>
