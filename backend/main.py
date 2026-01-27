@@ -75,6 +75,7 @@ class AIGISystemHAL:
         self.target_wp = None # Waypoint target
         self.ai_engine = TacticalAIEngine()
         self.last_ai_update = 0
+        self.joystick_vector = {"x": 0, "y": 0, "z": 0} # Real-time manual control vector
 
     async def initialize(self):
         print("[AIGIS] Professional Cold Boot Sequence...")
@@ -154,8 +155,11 @@ class AIGISystemHAL:
                 self.sim_pos["x"] += random.uniform(-0.1, 0.1)
                 self.sim_pos["z"] += random.uniform(-0.1, 0.1)
             
-            # More aggressive altitude climb for visual impact
-            self.sim_pos["y"] = min(150, self.sim_pos["y"] + 3.0 if self.sim_pos["y"] < 120 else 120 + random.uniform(-1, 1))
+            # Apply manual robotic control if active
+            self.sim_pos["x"] += self.joystick_vector["x"] * 0.8
+            self.sim_pos["y"] = max(2, min(150, self.sim_pos["y"] + self.joystick_vector["y"] * 0.8))
+            self.sim_pos["z"] += self.joystick_vector["z"] * 0.8
+
             self.battery -= 0.015
         elif self.status == "EMERGENCY":
             self.sim_pos["y"] = max(5, self.sim_pos["y"] - 0.8)
@@ -240,6 +244,17 @@ async def send_command(cmd: str):
 async def set_scenario(name: str):
     hal.run_scenario(name)
     return {"status": "INJECTED", "scenario": name}
+
+@app.post("/api/joystick")
+async def post_joystick(vector: dict):
+    # Vector: {lv: thrust/y, lh: yaw, rv: pitch, rh: roll} -> mapped to internal sim
+    # Simplified mapping for sim: rh/rv -> x/z movement, lv -> y movement
+    hal.joystick_vector = {
+        "x": vector.get("rh", 0),
+        "y": vector.get("lv", 0),
+        "z": -vector.get("rv", 0)
+    }
+    return {"status": "RC_ACK"}
 
 @app.websocket("/ws/telemetry")
 async def websocket_telemetry(websocket: WebSocket):

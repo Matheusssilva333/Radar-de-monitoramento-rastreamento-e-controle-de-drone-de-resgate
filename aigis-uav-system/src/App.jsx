@@ -4,6 +4,59 @@ import HUD from './components/HUD'
 import ControlPanel from './components/ControlPanel'
 import './App.css'
 
+function RoboticJoystick({ label, onMove }) {
+  const [pos, setPos] = useState({ x: 0, y: 0 })
+  const isDragging = useRef(false)
+  const containerRef = useRef()
+
+  const handleStart = () => { isDragging.current = true }
+  const handleEnd = () => {
+    isDragging.current = false
+    setPos({ x: 0, y: 0 })
+    onMove({ x: 0, y: 0 })
+  }
+  const handleMove = (e) => {
+    if (!isDragging.current) return
+    const rect = containerRef.current.getBoundingClientRect()
+    const centerX = rect.width / 2
+    const centerY = rect.height / 2
+
+    // Support touch and mouse
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY
+
+    let x = (clientX - rect.left - centerX) / centerX
+    let y = (clientY - rect.top - centerY) / centerY
+
+    // Clamp to circle
+    const dist = Math.sqrt(x * x + y * y)
+    if (dist > 1) { x /= dist; y /= dist; }
+
+    setPos({ x: x * 40, y: y * 40 })
+    onMove({ x, y: -y }) // Invert Y for aerospace standard
+  }
+
+  return (
+    <div
+      className="joystick-ring"
+      ref={containerRef}
+      onMouseDown={handleStart}
+      onMouseMove={handleMove}
+      onMouseUp={handleEnd}
+      onMouseLeave={handleEnd}
+      onTouchStart={handleStart}
+      onTouchMove={handleMove}
+      onTouchEnd={handleEnd}
+    >
+      <div
+        className="joystick-knob"
+        style={{ transform: `translate(${pos.x}px, ${pos.y}px)` }}
+      />
+      <div className="joystick-label">{label}</div>
+    </div>
+  )
+}
+
 function App() {
   const [telemetry, setTelemetry] = useState(null)
   const [aiMessages, setAiMessages] = useState([
@@ -106,6 +159,27 @@ function App() {
   }
 
   const [isRoboticMode, setIsRoboticMode] = useState(false)
+  const joystickState = useRef({ lv: 0, lh: 0, rv: 0, rh: 0 })
+
+  const sendJoystickUpdate = async () => {
+    if (!isRoboticMode) return
+    try {
+      const apiBase = import.meta.env.DEV ? 'http://localhost:8000/api' : `${window.location.origin}/api`
+      await fetch(`${apiBase}/joystick`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(joystickState.current)
+      })
+    } catch (e) { console.error("RC Link Error", e) }
+  }
+
+  useEffect(() => {
+    let interval;
+    if (isRoboticMode) {
+      interval = setInterval(sendJoystickUpdate, 150) // 6.6Hz update rate for stability
+    }
+    return () => clearInterval(interval)
+  }, [isRoboticMode])
 
   if (!telemetry) {
     return (
@@ -150,14 +224,14 @@ function App() {
             DIRECT UAV CONTROL LINK [HARDWARE ADAPTIVE]
           </div>
           <div className="robotic-joysticks">
-            <div className="joystick-ring">
-              <div className="joystick-knob" />
-              <div className="joystick-label">THRUST / YAW</div>
-            </div>
-            <div className="joystick-ring">
-              <div className="joystick-knob" />
-              <div className="joystick-label">PITCH / ROLL</div>
-            </div>
+            <RoboticJoystick
+              label="THRUST / YAW"
+              onMove={(v) => { joystickState.current.lv = v.y; joystickState.current.lh = v.x; }}
+            />
+            <RoboticJoystick
+              label="PITCH / ROLL"
+              onMove={(v) => { joystickState.current.rv = v.y; joystickState.current.rh = v.x; }}
+            />
           </div>
           <div className="robotic-footer">
             PRECISION TRAJECTORY TRACKING ACTIVE
