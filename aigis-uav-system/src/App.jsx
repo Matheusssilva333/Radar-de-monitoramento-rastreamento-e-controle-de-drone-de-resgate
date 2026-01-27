@@ -14,12 +14,23 @@ function App() {
   const ws = useRef(null)
 
   useEffect(() => {
-    // Connect to FastAPI WebSocket
-    ws.current = new WebSocket('ws://localhost:8000/ws/telemetry')
+    // Connect to dynamic WebSocket host
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const host = window.location.host
+    const wsUrl = process.env.NODE_ENV === 'development'
+      ? 'ws://localhost:8000/ws/telemetry'
+      : `${protocol}//${host}/ws/telemetry`
+
+    ws.current = new WebSocket(wsUrl)
 
     ws.current.onmessage = (event) => {
       const data = JSON.parse(event.data)
       setTelemetry(data)
+
+      // If there's a new AI alert, add it to logs
+      if (data.status.ai_alert && !aiMessages.includes(data.status.ai_alert)) {
+        setAiMessages(prev => [data.status.ai_alert, ...prev].slice(0, 15))
+      }
     }
 
     ws.current.onerror = (error) => {
@@ -30,13 +41,17 @@ function App() {
     return () => {
       if (ws.current) ws.current.close()
     }
-  }, [])
+  }, [aiMessages])
 
   const handleCommand = async (command) => {
     try {
-      const response = await fetch(`http://localhost:8000/command/${command}`, { method: 'POST' })
+      const apiBase = process.env.NODE_ENV === 'development'
+        ? 'http://localhost:8000/api'
+        : `${window.location.origin}/api`
+
+      const response = await fetch(`${apiBase}/command/${command}`, { method: 'POST' })
       const data = await response.json()
-      
+
       let newMessage = ""
       switch (command) {
         case 'takeoff': newMessage = "Initiating engine start. Ascent to safe flight altitude."; break
@@ -47,7 +62,7 @@ function App() {
         case 'emergency': newMessage = "ATTENTION: EMERGENCY PROTOCOL ACTIVE. RTL INITIATED."; break
         default: newMessage = `Command ${command} transmitted.`; break
       }
-      
+
       setAiMessages(prev => [newMessage, ...prev].slice(0, 10))
     } catch (error) {
       console.error("Command Error:", error)
@@ -57,11 +72,11 @@ function App() {
 
   if (!telemetry) {
     return (
-      <div className="loading" style={{ 
-        height: '100vh', 
-        display: 'flex', 
+      <div className="loading" style={{
+        height: '100vh',
+        display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center', 
+        justifyContent: 'center',
         alignItems: 'center',
         background: 'var(--bg)',
         color: 'var(--primary)'
@@ -75,18 +90,18 @@ function App() {
   return (
     <div className="app-container" style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
       <div className="crt-scanline" />
-      
-      <Radar 
-        dronePosition={telemetry.position} 
-        targets={telemetry.targets} 
+
+      <Radar
+        dronePosition={telemetry.position}
+        targets={telemetry.targets}
       />
-      
-      <HUD 
-        droneStatus={telemetry.status} 
-        aiMessages={aiMessages} 
+
+      <HUD
+        droneStatus={telemetry.status}
+        aiMessages={aiMessages}
         position={telemetry.position}
       />
-      
+
       <ControlPanel onCommand={handleCommand} />
 
       {/* Decorative Vignette */}

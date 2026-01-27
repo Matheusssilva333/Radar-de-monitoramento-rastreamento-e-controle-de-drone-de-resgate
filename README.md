@@ -35,5 +35,13 @@ npm run dev
 ## 📡 Arquitetura de Comunicação
 O sistema utiliza um loop de 10Hz no backend para simular a dinâmica de voo e detecção de alvos, enviando pacotes JSON via WebSocket para o frontend React, garantindo que o radar esteja sempre sincronizado com o drone.
 
+## 🌐 Deploy no Render
+
+Para colocar este projeto online e impressionar no hackathon:
+1.  Conecte seu repositório GitHub ao **Render**.
+2.  O Render detectará automaticamente o arquivo `render.yaml`.
+3.  O sistema será buildado e servido em uma única URL (Ex: `seu-projeto.onrender.com`).
+4.  O Frontend será servido na rota `/app`.
+
 ---
 **Desenvolvido para Missões Críticas e Operações de Resgate.**
