@@ -97,6 +97,60 @@ function Terrain({ state }) {
   )
 }
 
+function DroneModel({ state, position }) {
+  const rotorsRef = useRef([])
+
+  useFrame((state_frame) => {
+    rotorsRef.current.forEach((rotor, i) => {
+      if (rotor) {
+        rotor.rotation.y += 0.8 // High-speed rotor rotation
+      }
+    })
+  })
+
+  const color = state === 'EMERGENCY' ? '#ff0000' : '#00f2ff'
+
+  return (
+    <group position={position}>
+      {/* Central Tactical Body */}
+      <mesh castShadow>
+        <boxGeometry args={[1.2, 0.4, 2]} />
+        <meshStandardMaterial color="#222" metalness={0.8} roughness={0.2} />
+      </mesh>
+      <mesh position={[0, 0.2, 0.5]} castShadow>
+        <boxGeometry args={[0.8, 0.3, 1]} />
+        <meshStandardMaterial color="#333" />
+      </mesh>
+
+      {/* Arms (X-Config) */}
+      {[[-1, 1], [1, 1], [-1, -1], [1, -1]].map(([x, z], i) => (
+        <group key={i} position={[x * 1.2, 0, z * 1.2]}>
+          <mesh rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.1, 0.1, 1.8]} />
+            <meshStandardMaterial color="#111" />
+          </mesh>
+          {/* Rotors / Propellers */}
+          <mesh ref={el => rotorsRef.current[i] = el} position={[0, 0.2, 0]}>
+            <boxGeometry args={[1.5, 0.05, 0.1]} />
+            <meshStandardMaterial color="#444" />
+          </mesh>
+          <mesh position={[0, 0.1, 0]}>
+            <cylinderGeometry args={[0.2, 0.2, 0.1, 16]} />
+            <meshStandardMaterial color="#111" />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Navigation Lights */}
+      <pointLight color={color} intensity={5} distance={10} />
+      <mesh position={[0, 0, 1.1]}>
+        <sphereGeometry args={[0.1, 16, 16]} />
+        <meshBasicMaterial color={color} />
+      </mesh>
+    </group>
+  )
+}
+
 function Scene({ dronePosition, targets, state }) {
   const scannerRef = useRef()
 
@@ -133,23 +187,18 @@ function Scene({ dronePosition, targets, state }) {
         position={[0, -4.9, 0]}
       />
 
-      {/* Drone with Trail */}
+      {/* UAV Tactical Asset with Trail */}
       <Trail
-        width={1.5}
-        length={20}
+        width={1.2}
+        length={25}
         color={state === 'EMERGENCY' ? '#ff0000' : '#00f2ff'}
         attenuation={(t) => t * t}
       >
-        <Float speed={3} rotationIntensity={1} floatIntensity={1}>
-          <mesh position={[dronePosition.x, dronePosition.y / 20, dronePosition.z]}>
-            <octahedronGeometry args={[0.6, 0]} />
-            <meshStandardMaterial
-              color="#ffffff"
-              emissive={state === 'EMERGENCY' ? '#ff0000' : '#00f2ff'}
-              emissiveIntensity={5}
-            />
-            <pointLight color={state === 'EMERGENCY' ? '#ff0000' : '#00f2ff'} intensity={5} distance={15} />
-          </mesh>
+        <Float speed={3} rotationIntensity={0.5} floatIntensity={0.5}>
+          <DroneModel
+            state={state}
+            position={[dronePosition.x, dronePosition.y / 20, dronePosition.z]}
+          />
         </Float>
       </Trail>
 
