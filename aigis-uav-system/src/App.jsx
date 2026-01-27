@@ -4,6 +4,33 @@ import HUD from './components/HUD'
 import ControlPanel from './components/ControlPanel'
 import './App.css'
 
+function SystemLogs({ logs }) {
+  if (!logs || logs.length === 0) return null
+  return (
+    <div style={{
+      position: 'absolute',
+      bottom: '180px', // Above controls
+      left: '20px',
+      width: '300px',
+      maxHeight: '150px',
+      overflowY: 'auto',
+      background: 'rgba(0, 0, 0, 0.7)',
+      border: '1px solid var(--border)',
+      padding: '10px',
+      color: '#00ff44',
+      fontFamily: 'monospace',
+      fontSize: '0.7rem',
+      zIndex: 40,
+      pointerEvents: 'none'
+    }}>
+      <div style={{ borderBottom: '1px solid #333', marginBottom: '5px', fontWeight: 'bold' }}>SYSTEM LOGS</div>
+      {logs.slice(0, 8).map((log, i) => (
+        <div key={i} style={{ opacity: 1 - (i * 0.1) }}>{log}</div>
+      ))}
+    </div>
+  )
+}
+
 function RoboticJoystick({ label, onMove }) {
   const [pos, setPos] = useState({ x: 0, y: 0 })
   const isDragging = useRef(false)
@@ -161,22 +188,20 @@ function App() {
   const [isRoboticMode, setIsRoboticMode] = useState(false)
   const joystickState = useRef({ lv: 0, lh: 0, rv: 0, rh: 0 })
 
-  const sendJoystickUpdate = async () => {
-    if (!isRoboticMode) return
+  const sendJoystickUpdate = () => {
+    if (!isRoboticMode || !ws.current || ws.current.readyState !== WebSocket.OPEN) return
     try {
-      const apiBase = import.meta.env.DEV ? 'http://localhost:8000/api' : `${window.location.origin}/api`
-      await fetch(`${apiBase}/joystick`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(joystickState.current)
-      })
+      ws.current.send(JSON.stringify({
+        type: 'JOYSTICK',
+        data: joystickState.current
+      }))
     } catch (e) { console.error("RC Link Error", e) }
   }
 
   useEffect(() => {
     let interval;
     if (isRoboticMode) {
-      interval = setInterval(sendJoystickUpdate, 80) // 12.5Hz update rate for snappy control
+      interval = setInterval(sendJoystickUpdate, 80) // 12.5Hz WS update
     }
     return () => clearInterval(interval)
   }, [isRoboticMode])
@@ -209,6 +234,7 @@ function App() {
       />
 
       <HUD telemetry={telemetry} />
+      <SystemLogs logs={telemetry.status.logs || []} />
 
       <ControlPanel
         onCommand={handleCommand}

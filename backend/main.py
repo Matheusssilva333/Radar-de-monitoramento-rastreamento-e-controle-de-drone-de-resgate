@@ -61,6 +61,7 @@ class AIGISystemHAL:
     Orchestrates between Real Hardware (MAVLink) and AI Simulation.
     """
     def __init__(self):
+        self.logs = [] # Rolling system logs for frontend
         self.simulation_mode = True
         self.hw_driver = MAVLinkDriver(connection_string=os.environ.get("DRONE_PORT"))
         self.sim_pos = {"x": 0, "y": 5, "z": 0}
@@ -76,7 +77,13 @@ class AIGISystemHAL:
         self.target_wp = None # Waypoint target
         self.ai_engine = TacticalAIEngine()
         self.last_ai_update = 0
+        self.last_ai_update = 0
         self.joystick_vector = {"x": 0, "y": 0, "z": 0} # Real-time manual control vector
+
+    def log_event(self, msg: str):
+        timestamp = time.strftime("%H:%M:%S")
+        self.logs.insert(0, f"[{timestamp}] {msg}")
+        self.logs = self.logs[:50] # Keep last 50
 
     async def initialize(self):
         print("[AIGIS] Professional Cold Boot Sequence...")
@@ -148,6 +155,7 @@ class AIGISystemHAL:
         if is_manual and self.status == "IDLE":
             self.status = "MANUAL"
             self.last_ai_msg = "GEMINI-3 FLASH // MANUAL OVERRIDE DETECTED. PILOT IN CONTROL."
+            self.log_event("MANUAL OVERRIDE: Joystick Input Detected")
 
         if self.status in ["FLYING", "RETURNING", "SEARCHING", "SCANNING", "MANUAL"]:
             # Move towards target waypoint if set
@@ -193,7 +201,10 @@ class AIGISystemHAL:
                 "hardware_link": not self.simulation_mode, "altitude": round(self.sim_pos["y"], 1),
                 "velocity": round(velocity, 1), "health": health
             },
-            "targets": self.targets
+                "velocity": round(velocity, 1), "health": health
+            },
+            "targets": self.targets,
+            "logs": self.logs
         }
 
 # --- PATH CONFIGURATION ---
@@ -202,6 +213,29 @@ DIST_DIR = os.path.join(BASE_DIR, "aigis-uav-system", "dist")
 ROOT_INDEX = os.path.join(BASE_DIR, "index.html")
 
 hal = AIGISystemHAL()
+
+# --- WEBSOCKET MANAGER ---
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict):
+        # Broadcast needed for telemetry fan-out
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except Exception:
+                pass # Connection likely dead, will be cleaned up
+
+manager = ConnectionManager()
 
 @app.on_event("startup")
 async def startup_event():
@@ -215,6 +249,20 @@ async def startup_event():
     await hal.initialize()
     # Continuous Simulation Clock (Async)
     asyncio.create_task(simulation_engine_loop())
+    asyncio.create_task(telemetry_broadcast_loop())
+
+async def telemetry_broadcast_loop():
+    """Independent Telemetry Broadcast (12.5Hz)"""
+    print("[AIGIS] RADIO BROADCAST TOWER ONLINE")
+    while True:
+        try:
+             # Downlink current state to all pilots
+             if len(manager.active_connections) > 0:
+                 data = hal.get_telemetry()
+                 await manager.broadcast(data)
+        except Exception as e:
+            print(f"[RADIO ERROR] {e}")
+        await asyncio.sleep(0.08)
 
 async def simulation_engine_loop():
     """Independent High-Frequency Physics Clock (20Hz)"""
@@ -277,26 +325,30 @@ async def post_joystick(vector: dict):
 
 @app.websocket("/ws/telemetry")
 async def websocket_telemetry(websocket: WebSocket):
-    await websocket.accept()
+    await manager.connect(websocket)
     print("[WS] Client Connected")
     try:
         while True:
-            try:
-                # Downlink current state only (radio broadcast)
-                data = hal.get_telemetry()
-                await websocket.send_json(data)
-                await asyncio.sleep(0.08) # 12.5Hz downlink rate
-            except Exception as e:
-                # Silently exit on connection issues, log others
-                estr = str(e).lower()
-                if "close" in estr or "disconnect" in estr or "1006" in estr:
-                    break
-                print(f"[WS LOOP ERR] {e}")
-                await asyncio.sleep(1.0)
+            # Receive uplink data (Joystick / Commands)
+            data = await websocket.receive_json()
+            
+            # Process Joystick Packet
+            if data.get("type") == "JOYSTICK":
+                vector = data.get("data", {})
+                hal.joystick_vector = {
+                    "x": vector.get("rh", 0),
+                    "y": vector.get("lv", 0),
+                    "z": -vector.get("rv", 0)
+                }
+            
+            # Keep-alive logic implied by receive loop
+            
     except WebSocketDisconnect:
+        manager.disconnect(websocket)
         print("[WS] Client Disconnected")
     except Exception as e:
-        print(f"[WS FATAL ERR] {e}")
+        manager.disconnect(websocket)
+        # print(f"[WS LINK ERROR] {e}") # Silent error
 
 # --- UI & STATIC FILE ROUTES ---
 
