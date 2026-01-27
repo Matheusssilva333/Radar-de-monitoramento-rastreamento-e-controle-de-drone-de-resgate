@@ -540,3 +540,44 @@ body {
     transform: rotate(360deg);
   }
 }
+
+/* Terrain Legend Styles */
+.terrain-legend {
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+  width: 160px;
+  pointer-events: none;
+  font-family: 'JetBrains Mono', monospace;
+  color: #fff;
+}
+
+.legend-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+  letter-spacing: 1px;
+}
+
+.legend-gradient {
+  display: flex;
+  height: 180px;
+  gap: 1rem;
+}
+
+.gradient-bar {
+  flex-grow: 1;
+  background: linear-gradient(to top, #00ff44, #aaff00, #ffff00, #ffaa00, #ff0000);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.legend-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-align: right;
+  width: 50px;
+}
