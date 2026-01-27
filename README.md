@@ -44,7 +44,7 @@ npm run dev
 - *"GEMINI-3 FLASH ⚡ // THINKING: Humanoid heat signature detected. Probability 98%. Flagging Sector 2 as 'STABLE RESCUE'."*
 - *"GEMINI-3 FLASH ⚡ // ALERT: CRITICAL POWER DEPLETION. PROTOCOL 412: EMERGENCY DESCENT INITIATED."*
 
-## 📜 Achievements Summary (LinkedIn Ready)
+## 📜 Achievements Summary 
 Successfully developed **AIGIS**, an advanced AI-UAV Tactical Command System. 
 - Integrated **Google Gemini 3** for real-time mission reasoning.
 - Developed a high-performance **3D Radar Engine** using Three.js.
