@@ -98,23 +98,19 @@ class AIGISystemHAL:
             "targets": self.targets
         }
 
+# --- PATH CONFIGURATION ---
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DIST_DIR = os.path.join(BASE_DIR, "aigis-uav-system", "dist")
+ROOT_INDEX = os.path.join(BASE_DIR, "index.html")
+LEGACY_RADAR = os.path.join(BASE_DIR, "radar-standalone.html")
+
 hal = AIGISystemHAL()
 
 @app.on_event("startup")
 async def startup_event():
     await hal.initialize()
 
-@app.get("/")
-async def read_index():
-    return FileResponse("index.html")
-
-@app.get("/app")
-async def read_app():
-    return FileResponse("aigis-uav-system/dist/index.html")
-
-if os.path.exists("aigis-uav-system/dist"):
-    app.mount("/static", StaticFiles(directory="aigis-uav-system/dist"), name="static")
-
+# --- TACTICAL API & DATA ROUTES ---
 @app.get("/api/status")
 async def get_status():
     return hal.get_telemetry()
@@ -123,12 +119,9 @@ async def get_status():
 async def send_command(cmd: str):
     if not hal.simulation_mode:
         hal.hw_driver.send_command(cmd)
-    
-    # Still update HAL state for tracking
     if cmd == "takeoff": hal.status = "FLYING"
     elif cmd == "land": hal.status = "LANDED"
     elif cmd == "rtl": hal.status = "RETURNING"
-    
     return {"status": "dispatched", "target": "hardware" if not hal.simulation_mode else "simulator"}
 
 @app.websocket("/ws/telemetry")
@@ -141,6 +134,39 @@ async def websocket_telemetry(websocket: WebSocket):
             await asyncio.sleep(0.1) 
     except WebSocketDisconnect:
         pass
+
+# --- UI & STATIC FILE ROUTES ---
+
+# Route for the Modern React App
+@app.get("/app")
+async def read_app():
+    app_index = os.path.join(DIST_DIR, "index.html")
+    if os.path.exists(app_index):
+        return FileResponse(app_index)
+    return {"detail": "React App build not found. Run npm run build."}
+
+# Route for the Legacy Standalone Radar
+@app.get("/radar-standalone.html")
+async def read_legacy():
+    if os.path.exists(LEGACY_RADAR):
+        return FileResponse(LEGACY_RADAR)
+    return {"detail": f"Legacy Radar file not found."}
+
+# Route for the Main Tactical Portal
+@app.get("/")
+async def read_index():
+    if os.path.exists(ROOT_INDEX):
+        return FileResponse(ROOT_INDEX)
+    return {"detail": "Landing page not found."}
+
+# Asset mounts for the React app
+assets_path = os.path.join(DIST_DIR, "assets")
+if os.path.exists(assets_path):
+    app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
+
+# Catch-all for root-level build assets (vite.svg, icons, etc)
+if os.path.exists(DIST_DIR):
+    app.mount("/static", StaticFiles(directory=DIST_DIR), name="static")
 
 if __name__ == "__main__":
     import uvicorn
