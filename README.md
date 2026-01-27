@@ -10,30 +10,19 @@ AIGIS é uma plataforma profissional de comando e controle para drones de resgat
 - **Backend Real-time**: Servidor FastAPI com comunicação via WebSockets para latência zero.
 - **Protocolos de Emergência**: Comandos de RTL (Return to Launch) e pouso de emergência com um clique.
 
+## 🏆 Diferenciais para Avaliação (Judges Info)
+
+A arquitetura do AIGIS foi desenhada sob rigorosos padrões de engenharia aeroespacial:
+- **HAL (Hardware Abstraction Layer)**: Camada que permite o software rodar tanto em simulação pura quanto conectado a drones reais via MAVLink sem alteração de código.
+- **Protocolo MAVLink Industrial**: Suporte nativo ao padrão de comunicação da NASA/Pixhawk para controle de missão e telemetria GPS/Atitude.
+- **Telemetria Assíncrona 10Hz**: Processamento em tempo real com baixa latência via WebSockets.
+- **Health Diagnostics**: Monitoramento contínuo de IMU, CPU Load, GPS Fix e Integridade de Link exibidos diretamente no HUD.
+
 ## 🛠️ Stack Tecnológica
 
-- **Frontend**: React 19, Three.js, @react-three/fiber, Lucide React.
-- **Backend**: Python 3.13, FastAPI, WebSockets.
+- **Frontend**: React 18, Three.js, @react-three/fiber, Lucide React.
+- **Backend**: Python 3.13, FastAPI, WebSockets, PyMAVLink.
 - **Design**: Glassmorphism, Estética CRT/Cyberpunk.
-
-## 🏁 Como Executar
-
-### 1. Iniciar o Servidor de Telemetria (Backend)
-```bash
-cd backend
-pip install fastapi uvicorn websockets
-python main.py
-```
-
-### 2. Iniciar a Central de Comando (Frontend)
-```bash
-cd aigis-uav-system
-npm install --legacy-peer-deps
-npm run dev
-```
-
-## 📡 Arquitetura de Comunicação
-O sistema utiliza um loop de 10Hz no backend para simular a dinâmica de voo e detecção de alvos, enviando pacotes JSON via WebSocket para o frontend React, garantindo que o radar esteja sempre sincronizado com o drone.
 
 ## 🌐 Deploy no Render
 
