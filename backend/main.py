@@ -39,8 +39,9 @@ class TacticalAIEngine:
             response = await asyncio.to_thread(self.chat.send_message, self.system_prompt + "\n" + prompt)
             return f"GEMINI-3 FLASH // {response.text.strip().upper()}"
         except Exception as e:
+            if "429" in str(e):
+                return "GEMINI-3 FLASH // [QUOTA_SHIELD] LOCAL LOGIC ACTIVE - LIMIT REACHED."
             print(f"[AI ERROR] {e}")
-            # Military-grade fallback to maintain operational continuity
             return "GEMINI-3 FLASH // [LOCAL_HEURISTICS] TARGET STABLE. PROCEED WITH CAUTION."
 
 app = FastAPI(title="AIGIS UAV Backend - Tactical Command & Control")
@@ -142,7 +143,13 @@ class AIGISystemHAL:
         self.status = hw_telemetry['mode']
 
     def _update_sim(self):
-        if self.status in ["FLYING", "RETURNING", "SEARCHING", "SCANNING"]:
+        # Auto-activate if joystick is being used
+        is_manual = any(abs(v) > 0.01 for v in self.joystick_vector.values())
+        if is_manual and self.status == "IDLE":
+            self.status = "MANUAL"
+            self.last_ai_msg = "GEMINI-3 FLASH // MANUAL OVERRIDE DETECTED. PILOT IN CONTROL."
+
+        if self.status in ["FLYING", "RETURNING", "SEARCHING", "SCANNING", "MANUAL"]:
             # Move towards target waypoint if set
             if self.target_wp:
                 dx = self.target_wp["x"] - self.sim_pos["x"]
@@ -155,10 +162,10 @@ class AIGISystemHAL:
                 self.sim_pos["x"] += random.uniform(-0.1, 0.1)
                 self.sim_pos["z"] += random.uniform(-0.1, 0.1)
             
-            # Apply manual robotic control if active
-            self.sim_pos["x"] += self.joystick_vector["x"] * 0.8
-            self.sim_pos["y"] = max(2, min(150, self.sim_pos["y"] + self.joystick_vector["y"] * 0.8))
-            self.sim_pos["z"] += self.joystick_vector["z"] * 0.8
+            # Apply manual robotic control if active (increased sensitivity)
+            self.sim_pos["x"] += self.joystick_vector["x"] * 1.5
+            self.sim_pos["y"] = max(0.5, min(150, self.sim_pos["y"] + self.joystick_vector["y"] * 1.5))
+            self.sim_pos["z"] += self.joystick_vector["z"] * 1.5
 
             self.battery -= 0.015
         elif self.status == "EMERGENCY":
@@ -266,9 +273,14 @@ async def websocket_telemetry(websocket: WebSocket):
                 await hal.update()
                 data = hal.get_telemetry()
                 await websocket.send_json(data)
+                await asyncio.sleep(0.12)
             except Exception as e:
+                # Silently exit on connection issues, log others
+                estr = str(e).lower()
+                if "close" in estr or "disconnect" in estr or "1006" in estr:
+                    break
                 print(f"[WS LOOP ERR] {e}")
-            await asyncio.sleep(0.12) # Adjusted for stability
+                await asyncio.sleep(1.0)
     except WebSocketDisconnect:
         print("[WS] Client Disconnected")
     except Exception as e:
