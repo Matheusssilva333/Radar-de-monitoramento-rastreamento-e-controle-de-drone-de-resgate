@@ -1,15 +1,18 @@
 import os
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 import asyncio
 import json
 import random
 import time
-from typing import List
+from typing import List, Optional
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
-app = FastAPI(title="AIGIS UAV Backend")
+# AIGIS Core Drivers
+from backend.drivers.mavlink_driver import MAVLinkDriver
+
+app = FastAPI(title="AIGIS UAV Backend - Tactical Command & Control")
 
 # CORS configuration
 app.add_middleware(
@@ -20,106 +23,122 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class DroneSimulator:
+class AIGISystemHAL:
+    """
+    Tactical Hardware Abstraction Layer.
+    Orchestrates between Real Hardware (MAVLink) and AI Simulation.
+    """
     def __init__(self):
-        self.x = 0
-        self.y = 5
-        self.z = 0
+        self.simulation_mode = True
+        self.hw_driver = MAVLinkDriver(connection_string=os.environ.get("DRONE_PORT"))
+        self.sim_pos = {"x": 0, "y": 5, "z": 0}
         self.battery = 100.0
-        self.signal = -45
-        self.velocity = 0.0
         self.status = "IDLE"
         self.targets = [
             {"id": 1, "x": 12, "y": 0, "z": 8, "type": "CIVILIAN", "detected": False, "priority": "HIGH"},
             {"id": 2, "x": -18, "y": 0, "z": -12, "type": "HAZARD", "detected": False, "priority": "CRITICAL"},
-            {"id": 3, "x": 5, "y": 0, "z": -25, "type": "STRUCTURE", "detected": False, "priority": "MEDIUM"},
-            {"id": 4, "x": -30, "y": 0, "z": 15, "type": "CIVILIAN", "detected": False, "priority": "HIGH"}
+            {"id": 3, "x": 5, "y": 0, "z": -25, "type": "STRUCTURE", "detected": False, "priority": "MEDIUM"}
         ]
         self.start_time = time.time()
-        self.last_ai_msg = ""
+        self.last_ai_msg = "SYSTEM INITIALIZED: STANDBY"
+
+    async def initialize(self):
+        # Professional Cold Boot Sequence
+        print("[AIGIS] Initializing AI Systems...")
+        if os.environ.get("AUTO_CONNECT_HW") == "1":
+            success = self.hw_driver.connect()
+            if success:
+                self.simulation_mode = False
+                self.last_ai_msg = "HARDWARE LINK ESTABLISHED (MAVLINK)"
+            else:
+                self.last_ai_msg = "HARDWARE NOT DETECTED - FALLING BACK TO AI SIMULATION"
 
     def update(self):
-        # Basic flight dynamics simulation
-        if self.status in ["FLYING", "RETURNING"]:
-            self.x += random.uniform(-0.15, 0.15)
-            self.z += random.uniform(-0.15, 0.15)
-            self.y = 120 + random.uniform(-1, 1)
-            self.battery -= 0.012
-            self.velocity = 18.5 + random.uniform(-1, 1)
-        elif self.status == "EMERGENCY":
-            self.y -= 0.5
-            self.y = max(5, self.y)
-            self.battery -= 0.05
+        if self.simulation_mode:
+            self._update_sim()
         else:
-            self.y = 5 + (0.3 * (random.random() - 0.5))
-            self.velocity = 0.0
+            self._sync_hardware()
+
+    def _sync_hardware(self):
+        hw_telemetry = self.hw_driver.get_data()
+        # Map MAVLink coordinates to AIGIS Radar view (X, Y, Z translation)
+        self.sim_pos["x"] = (hw_telemetry['lng'] - 0) * 100000  # Offset-based scaling
+        self.sim_pos["z"] = (hw_telemetry['lat'] - 0) * 100000
+        self.sim_pos["y"] = hw_telemetry['alt']
+        self.battery = hw_telemetry['battery_remaining']
+        self.status = hw_telemetry['mode']
+
+    def _update_sim(self):
+        if self.status in ["FLYING", "RETURNING"]:
+            self.sim_pos["x"] += random.uniform(-0.15, 0.15)
+            self.sim_pos["z"] += random.uniform(-0.15, 0.15)
+            self.sim_pos["y"] = 120 + random.uniform(-1, 1)
+            self.battery -= 0.012
+        else:
+            self.sim_pos["y"] = 5 + (0.3 * (random.random() - 0.5))
             self.battery -= 0.001
-
-        self.signal = -45 + random.randint(-8, 8)
-        self.battery = max(0, self.battery)
-
-        # AI Detection simulation
+        
+        # AI Detection Loop
         for target in self.targets:
-            dist = ((self.x - target["x"])**2 + (self.z - target["z"])**2)**0.5
+            dist = ((self.sim_pos["x"] - target["x"])**2 + (self.sim_pos["z"] - target["z"])**2)**0.5
             if dist < 12 and not target["detected"]:
                 target["detected"] = True
-                self.last_ai_msg = f"GEMINI_3: Detected {target['priority']} priority {target['type']} at sector {random.choice(['A','B','C'])}{random.randint(1,9)}"
+                self.last_ai_msg = f"GEMINI_3: Detected {target['type']} at {target['priority']} alert level."
 
     def get_telemetry(self):
         return {
-            "position": {"x": self.x, "y": self.y, "z": self.z},
+            "position": self.sim_pos,
             "status": {
                 "battery": round(self.battery, 2),
-                "signal": self.signal,
-                "velocity": round(self.velocity, 2),
-                "mission_time": round(time.time() - self.start_time, 0),
                 "state": self.status,
-                "ai_alert": self.last_ai_msg
+                "ai_alert": self.last_ai_msg,
+                "mission_time": round(time.time() - self.start_time, 0),
+                "hardware_link": not self.simulation_mode
             },
             "targets": self.targets
         }
 
-drone = DroneSimulator()
+hal = AIGISystemHAL()
 
-# Serve static files from the root build
-# We'll serve the main index.html at root
+@app.on_event("startup")
+async def startup_event():
+    await hal.initialize()
+
 @app.get("/")
 async def read_index():
     return FileResponse("index.html")
-
-# Serve the legacy radar and other root assets
-@app.get("/radar-standalone.html")
-async def read_legacy():
-    return FileResponse("radar-standalone.html")
-
-# Mount the static directory for the React build
-if os.path.exists("aigis-uav-system/dist"):
-    app.mount("/static", StaticFiles(directory="aigis-uav-system/dist"), name="static")
 
 @app.get("/app")
 async def read_app():
     return FileResponse("aigis-uav-system/dist/index.html")
 
+if os.path.exists("aigis-uav-system/dist"):
+    app.mount("/static", StaticFiles(directory="aigis-uav-system/dist"), name="static")
+
 @app.get("/api/status")
 async def get_status():
-    return drone.get_telemetry()
+    return hal.get_telemetry()
 
 @app.post("/api/command/{cmd}")
 async def send_command(cmd: str):
-    if cmd == "takeoff": drone.status = "FLYING"
-    elif cmd == "land": drone.status = "LANDED"
-    elif cmd == "rtl": drone.status = "RETURNING"
-    elif cmd == "emergency": drone.status = "EMERGENCY"
-    return {"status": "success", "command": cmd, "drone_state": drone.status}
+    if not hal.simulation_mode:
+        hal.hw_driver.send_command(cmd)
+    
+    # Still update HAL state for tracking
+    if cmd == "takeoff": hal.status = "FLYING"
+    elif cmd == "land": hal.status = "LANDED"
+    elif cmd == "rtl": hal.status = "RETURNING"
+    
+    return {"status": "dispatched", "target": "hardware" if not hal.simulation_mode else "simulator"}
 
 @app.websocket("/ws/telemetry")
 async def websocket_telemetry(websocket: WebSocket):
     await websocket.accept()
     try:
         while True:
-            drone.update()
-            await websocket.send_json(drone.get_telemetry())
-            await asyncio.sleep(0.1) # 10Hz
+            hal.update()
+            await websocket.send_json(hal.get_telemetry())
+            await asyncio.sleep(0.1) 
     except WebSocketDisconnect:
         pass
 

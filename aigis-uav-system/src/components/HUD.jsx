@@ -25,9 +25,9 @@ export default function HUD({ droneStatus, aiMessages, position }) {
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.8rem' }}>
                         <StatItem icon={<Battery size={14} />} label="BAT" value={`${droneStatus.battery}%`} color={droneStatus.battery < 20 ? 'var(--danger)' : 'var(--success)'} />
-                        <StatItem icon={<Signal size={14} />} label="LINK" value={`${droneStatus.signal}dBm`} />
+                        <StatItem icon={<Activity size={14} />} label="HW_LINK" value={droneStatus.hardware_link ? "MAVLINK" : "SIM_MODE"} color={droneStatus.hardware_link ? 'var(--success)' : 'var(--warning)'} />
                         <StatItem icon={<Navigation size={14} />} label="NAV" value="GNSS-HIGH" />
-                        <StatItem icon={<Activity size={14} />} label="CPU" value="12%" />
+                        <StatItem icon={<Signal size={14} />} label="CPU" value="12%" />
                     </div>
                 </div>
 
