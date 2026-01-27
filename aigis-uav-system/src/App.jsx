@@ -22,23 +22,40 @@ function App() {
       : `${protocol}//${host}/ws/telemetry`
 
     ws.current = new WebSocket(wsUrl)
+    console.log("Connecting to Tactical Link:", wsUrl)
+
+    ws.current.onopen = () => {
+      console.log("Tactical Link Established [OK]")
+      setAiMessages(prev => ["SYSTEM: Telemetry link established.", ...prev].slice(0, 10))
+    }
 
     ws.current.onmessage = (event) => {
       const data = JSON.parse(event.data)
+      // console.log("TLM REDV:", data.status.state, data.status.altitude)
       setTelemetry(data)
 
       // Stable AI Alert Handler
       if (data.status?.ai_alert) {
         setAiMessages(prev => {
-          if (prev[0] === data.status.ai_alert) return prev
+          if (prev[prev.length - 1] === data.status.ai_alert) return prev
           return [data.status.ai_alert, ...prev].slice(0, 15)
         })
       }
     }
 
     ws.current.onerror = (error) => {
-      console.error("WebSocket Error:", error)
-      setAiMessages(prev => ["ERROR: Telemetry link unstable.", ...prev].slice(0, 10))
+      console.error("Tactical Link Fail:", error)
+      setAiMessages(prev => ["CRITICAL: Telemetry signal lost.", ...prev].slice(0, 10))
+    }
+
+    ws.current.onclose = () => {
+      console.warn("Tactical Link Closed. Attempting Reconnection...")
+      // Reconnect after 3 seconds
+      setTimeout(() => {
+        if (ws.current.readyState === WebSocket.CLOSED) {
+          window.location.reload()
+        }
+      }, 3000)
     }
 
     return () => {

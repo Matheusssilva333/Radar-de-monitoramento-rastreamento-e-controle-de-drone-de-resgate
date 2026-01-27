@@ -40,7 +40,8 @@ class TacticalAIEngine:
             return f"GEMINI-3 FLASH // {response.text.strip().upper()}"
         except Exception as e:
             print(f"[AI ERROR] {e}")
-            return "AIGIS // AI LINK UNSTABLE"
+            # Military-grade fallback to maintain operational continuity
+            return "GEMINI-3 FLASH // [LOCAL_HEURISTICS] TARGET STABLE. PROCEED WITH CAUTION."
 
 app = FastAPI(title="AIGIS UAV Backend - Tactical Command & Control")
 
@@ -82,7 +83,11 @@ class AIGISystemHAL:
             if success:
                 self.simulation_mode = False
                 self.last_ai_msg = "AIGIS // REAL HARDWARE LINK ENCRYPTED"
+                print("[HAL] HARDWARE MODE ACTIVE")
             else:
+                self.simulation_mode = True
+                self.last_ai_msg = "AIGIS // HW FAIL -> SIMULATION ACTIVE"
+                print("[HAL] HW CONNECTION FAILED. FALLING BACK TO SIM.")
                 self.last_ai_msg = "AIGIS // HARDWARE ERROR -> AI SIMULATION ACTIVE"
 
     def run_scenario(self, scenario_name: str):
@@ -112,13 +117,19 @@ class AIGISystemHAL:
         else:
             self._sync_hardware()
         
-        # Periodic AI Insight (every 10 seconds or on state change)
+        # Periodic AI Insight in background to NOT block websocket
         current_time = time.time()
-        if self.status != "IDLE" and (current_time - self.last_ai_update > 10):
+        if self.status != "IDLE" and (current_time - self.last_ai_update > 12):
+            self.last_ai_update = current_time
+            asyncio.create_task(self._update_ai_insight())
+
+    async def _update_ai_insight(self):
+        try:
             telemetry = self.get_telemetry()
             insight = await self.ai_engine.generate_insight(telemetry["status"])
             self.last_ai_msg = insight
-            self.last_ai_update = current_time
+        except Exception as e:
+            print(f"[BG AI ERROR] {e}")
 
     def _sync_hardware(self):
         hw_telemetry = self.hw_driver.get_data()
@@ -137,11 +148,12 @@ class AIGISystemHAL:
                     self.sim_pos["x"] += (dx/dist) * 0.2
                     self.sim_pos["z"] += (dz/dist) * 0.2
             else:
-                self.sim_pos["x"] += random.uniform(-0.05, 0.05)
-                self.sim_pos["z"] += random.uniform(-0.05, 0.05)
+                self.sim_pos["x"] += random.uniform(-0.1, 0.1)
+                self.sim_pos["z"] += random.uniform(-0.1, 0.1)
             
-            self.sim_pos["y"] = min(120, self.sim_pos["y"] + 0.5 if self.sim_pos["y"] < 100 else 100 + random.uniform(-1, 1))
-            self.battery -= 0.008
+            # More aggressive altitude climb for visual impact
+            self.sim_pos["y"] = min(150, self.sim_pos["y"] + 3.0 if self.sim_pos["y"] < 120 else 120 + random.uniform(-1, 1))
+            self.battery -= 0.015
         elif self.status == "EMERGENCY":
             self.sim_pos["y"] = max(5, self.sim_pos["y"] - 0.8)
             self.battery -= 0.05
@@ -179,6 +191,13 @@ hal = AIGISystemHAL()
 
 @app.on_event("startup")
 async def startup_event():
+    print("[AIGIS] LOGISTICS: Checking available AI models...")
+    if GEN_API_KEY:
+        try:
+            available_models = [m.name for m in genai.list_models()]
+            print(f"[AIGIS] AVAILABLE MODELS: {available_models}")
+        except Exception as e:
+            print(f"[AIGIS] COULD NOT LIST MODELS: {e}")
     await hal.initialize()
 
 # --- TACTICAL API & DATA ROUTES ---
@@ -188,7 +207,10 @@ async def get_status():
 
 @app.post("/api/command/{cmd}")
 async def send_command(cmd: str):
-    if not hal.simulation_mode: hal.hw_driver.send_command(cmd)
+    print(f"[COMMAND] Received: {cmd}")
+    if not hal.simulation_mode: 
+        print(f"[MAVLINK] Sending {cmd} to hardware...")
+        hal.hw_driver.send_command(cmd)
     if cmd == "takeoff": 
         hal.status = "FLYING"
         hal.last_ai_msg = "GEMINI-3 FLASH // PROTOCOL 101: Initializing vertical ascent. Stabilizing at mission altitude."

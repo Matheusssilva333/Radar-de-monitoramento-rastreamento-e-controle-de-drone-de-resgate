@@ -36,7 +36,7 @@ export default function ControlPanel({ onCommand, onScenario }) {
         <div className="control-panel-container glass-panel">
             <div className="panel-header-tactical">
                 <div className="status-dot-active" />
-                <span>TACTICAL INTERFACE VER 3.0</span>
+                <span>TACTICAL INTERFACE VER 3.5 - RECTIFIED</span>
             </div>
 
             {/* Mission Controls */}
