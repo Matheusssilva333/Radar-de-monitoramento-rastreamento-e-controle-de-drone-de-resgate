@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Play, Square, Home, AlertTriangle, Crosshair, Zap, Settings, RefreshCcw, Loader2, CheckCircle2 } from 'lucide-react'
+import { Play, Square, Home, AlertTriangle, Crosshair, Zap, Settings, RefreshCcw, Loader2, CheckCircle2, Map } from 'lucide-react'
 
 export default function ControlPanel({ onCommand, onScenario }) {
     const [loadingAction, setLoadingAction] = useState(null)
