@@ -7,9 +7,9 @@ import './App.css'
 function App() {
   const [telemetry, setTelemetry] = useState(null)
   const [aiMessages, setAiMessages] = useState([
-    "System initialized. GEMINI link established.",
+    "System initialized. G3-FLASH tactical link established.",
     "Awaiting command for search and rescue mission.",
-    "Scanning local airspace... Clear."
+    "GEMINI-3 FLASH // Scanning local airspace... Clear."
   ])
   const ws = useRef(null)
 
@@ -80,7 +80,7 @@ function App() {
         case 'takeoff': newMessage = "Initiating engine start. Ascent to safe flight altitude."; break
         case 'land': newMessage = "Landing sequence engaged. Finding stable terrain."; break
         case 'rtl': newMessage = "Return to Launch triggered. Reverting via safe corridor."; break
-        case 'scan': newMessage = "Gemini AI: Scanning Sector Alpha for thermal signatures..."; break
+        case 'scan': newMessage = "GEMINI-3 FLASH // Scanning Sector Alpha for thermal signatures..."; break
         case 'mission': newMessage = "Mission parameters updated. Path optimization in progress."; break
         case 'emergency': newMessage = "ATTENTION: EMERGENCY PROTOCOL ACTIVE. RTL INITIATED."; break
         default: newMessage = `Command ${command} transmitted.`; break

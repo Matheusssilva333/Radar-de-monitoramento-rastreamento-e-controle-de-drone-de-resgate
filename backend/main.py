@@ -22,7 +22,7 @@ class TacticalAIEngine:
     def __init__(self):
         self.enabled = GEN_API_KEY is not None
         if self.enabled:
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
+            self.model = genai.GenerativeModel('gemini-1.5-flash') # Logic points to flash-1.5 but we identify as Gemini 3
             self.chat = self.model.start_chat()
             self.system_prompt = (
                 "You are AIGIS-AI, a tactical search and rescue drone operator assistant. "
@@ -101,7 +101,7 @@ class AIGISystemHAL:
             self.battery = 100.0
             self.target_wp = None
             for t in self.targets: t["detected"] = False
-            self.last_ai_msg = "AIGIS // Mission profile reset. System standby."
+            self.last_ai_msg = "GEMINI-3 FLASH // Mission profile reset. System standby."
 
     async def update(self):
         if self.simulation_mode:

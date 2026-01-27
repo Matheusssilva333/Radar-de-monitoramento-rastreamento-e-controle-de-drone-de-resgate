@@ -3,8 +3,6 @@
 
 AIGIS is a professional-grade UAV (Unmanned Aerial Vehicle) monitoring and control system designed for high-stakes search and rescue missions. It integrates real-time telemetry, 3D tactical visualization, and Google's Gemini 3 (AI) reasoning to provide mission commanders with unparalleled situational awareness.
 
-![AIGIS HUD](public/demo_hud.png) *(Note: HUD is dynamically rendered in-browser)*
-
 ## 🚀 Key Features
 
 - **Gemini 3 Flash Tactical Reasoning**: Real-time mission analysis using Gemini 3 Flash. The AI evaluates telemetry data and provides tactical insights (e.g., thermal signature validation, power management alerts).
@@ -43,8 +41,8 @@ npm run dev
 ```
 
 ## 🧠 AI Insight Examples
-- *"GEMINI-3 PRO ⚡ // THINKING: Humanoid heat signature detected. Probability 98%. Flagging Sector 2 as 'STABLE RESCUE'."*
-- *"GEMINI-1.5 // ALERT: CRITICAL POWER DEPLETION. PROTOCOL 412: EMERGENCY DESCENT INITIATED."*
+- *"GEMINI-3 FLASH ⚡ // THINKING: Humanoid heat signature detected. Probability 98%. Flagging Sector 2 as 'STABLE RESCUE'."*
+- *"GEMINI-3 FLASH ⚡ // ALERT: CRITICAL POWER DEPLETION. PROTOCOL 412: EMERGENCY DESCENT INITIATED."*
 
 ## 📜 Achievements Summary (LinkedIn Ready)
 Successfully developed **AIGIS**, an advanced AI-UAV Tactical Command System. 
@@ -54,7 +52,7 @@ Successfully developed **AIGIS**, an advanced AI-UAV Tactical Command System.
 - Created a **Military-grade HUD** for aerospace-level situational awareness.
 
 ---
-**Raciocínio Tático Gemini 3 : Análise de missão em tempo real usando o Gemini 1.5 Flash. A IA avalia dados de telemetria e fornece informações táticas (por exemplo, validação de assinatura térmica, alertas de gerenciamento de energia).**
+**Raciocínio Tático Gemini 3 : Análise de missão em tempo real usando o Gemini 3 Flash. A IA avalia dados de telemetria e fornece informações táticas (por exemplo, validação de assinatura térmica, alertas de gerenciamento de energia).**
 
 **Desenvolvido para Missões Críticas e Operações de Resgate.**
 
