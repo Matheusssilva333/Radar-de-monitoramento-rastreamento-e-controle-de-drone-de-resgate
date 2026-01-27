@@ -11,6 +11,36 @@ from fastapi.responses import FileResponse
 
 # AIGIS Core Drivers
 from backend.drivers.mavlink_driver import MAVLinkDriver
+import google.generativeai as genai
+
+# Configure Gemini
+GEN_API_KEY = os.environ.get("GOOGLE_API_KEY")
+if GEN_API_KEY:
+    genai.configure(api_key=GEN_API_KEY)
+
+class TacticalAIEngine:
+    def __init__(self):
+        self.enabled = GEN_API_KEY is not None
+        if self.enabled:
+            self.model = genai.GenerativeModel('gemini-1.5-flash')
+            self.chat = self.model.start_chat()
+            self.system_prompt = (
+                "You are AIGIS-AI, a tactical search and rescue drone operator assistant. "
+                "Keep messages short, tactical, and in English. Use radio-style brevity. "
+                "Analyze the provided drone status and provide a one-line tactical insight or alert."
+            )
+
+    async def generate_insight(self, status: dict) -> str:
+        if not self.enabled:
+            return "AIGIS // AI OFFLINE - RUNNING LOCAL HEURISTICS"
+        
+        try:
+            prompt = f"Status: {status['state']}, Bat: {status['battery']}%, Alt: {status['altitude']}m. Insight?"
+            response = await asyncio.to_thread(self.chat.send_message, self.system_prompt + "\n" + prompt)
+            return f"GEMINI-1.5 // {response.text.strip().upper()}"
+        except Exception as e:
+            print(f"[AI ERROR] {e}")
+            return "AIGIS // AI LINK UNSTABLE"
 
 app = FastAPI(title="AIGIS UAV Backend - Tactical Command & Control")
 
@@ -42,6 +72,8 @@ class AIGISystemHAL:
         self.start_time = time.time()
         self.last_ai_msg = "SYSTEM READY // AWAITING EVALUATION INJECT"
         self.target_wp = None # Waypoint target
+        self.ai_engine = TacticalAIEngine()
+        self.last_ai_update = 0
 
     async def initialize(self):
         print("[AIGIS] Professional Cold Boot Sequence...")
@@ -71,11 +103,19 @@ class AIGISystemHAL:
             for t in self.targets: t["detected"] = False
             self.last_ai_msg = "AIGIS // Mission profile reset. System standby."
 
-    def update(self):
+    async def update(self):
         if self.simulation_mode:
             self._update_sim()
         else:
             self._sync_hardware()
+        
+        # Periodic AI Insight (every 10 seconds or on state change)
+        current_time = time.time()
+        if self.status != "IDLE" and (current_time - self.last_ai_update > 10):
+            telemetry = self.get_telemetry()
+            insight = await self.ai_engine.generate_insight(telemetry["status"])
+            self.last_ai_msg = insight
+            self.last_ai_update = current_time
 
     def _sync_hardware(self):
         hw_telemetry = self.hw_driver.get_data()
@@ -162,7 +202,7 @@ async def websocket_telemetry(websocket: WebSocket):
     await websocket.accept()
     try:
         while True:
-            hal.update()
+            await hal.update()
             await websocket.send_json(hal.get_telemetry())
             await asyncio.sleep(0.1) 
     except WebSocketDisconnect:

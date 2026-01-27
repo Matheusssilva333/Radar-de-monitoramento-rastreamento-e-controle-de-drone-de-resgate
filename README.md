@@ -1,36 +1,63 @@
-# AIGIS - Sistema Tático de Monitoramento UAV
+# AIGIS // Tactical 3D Trajectory & Radar System
+### Google Gemini 3 Hackathon Submission
 
-AIGIS é uma plataforma profissional de comando e controle para drones de resgate, integrando telemetria em tempo real, inteligência artificial tática e visualização 3D avançada.
+AIGIS is a professional-grade UAV (Unmanned Aerial Vehicle) monitoring and control system designed for high-stakes search and rescue missions. It integrates real-time telemetry, 3D tactical visualization, and Google's Gemini 3 (AI) reasoning to provide mission commanders with unparalleled situational awareness.
 
-## 🚀 Funcionalidades Nova Geração
+![AIGIS HUD](public/demo_hud.png) *(Note: HUD is dynamically rendered in-browser)*
 
-- **Painel Tático 3D**: Renderização de terreno procedural e rastreamento de UAV com Three.js.
-- **HUD Holográfico**: Interface inspirada em sistemas militares com telemetria detalhada (Altitude, Velocidade, Posição).
-- **IA Gemini 3 Flash**: Lógica de detecção automática de alvos e análise térmica (simulada).
-- **Backend Real-time**: Servidor FastAPI com comunicação via WebSockets para latência zero.
-- **Protocolos de Emergência**: Comandos de RTL (Return to Launch) e pouso de emergência com um clique.
+## 🚀 Key Features
 
-## 🏆 Diferenciais para Avaliação (Judges Info)
+- **Gemini 3 Tactical Reasoning**: Real-time mission analysis using Gemini 1.5 Flash. The AI evaluates telemetry data and provides tactical insights (e.g., thermal signature validation, power management alerts).
+- **Hifi 3D Radar Scene**: A full 3D environment built with Three.js (React-Three-Fiber) featuring procedural terrain, drone flight trails, and tactical target marking.
+- **Dual-Mode Backend**: Supports both **Simulation Mode** (for demonstrations) and **MAVLink Hardware Sync** (for real drone integration via Serial/Network).
+- **Aerospace Grade UI**: A premium HUD (Heads-Up Display) with CRT effects, glassmorphism, and MIL-SPEC telemetry visualizations.
+- **Scenario Injects**: Interactive scenario buttons to demonstrate AI behavior under rescue or emergency conditions.
 
-A arquitetura do AIGIS foi desenhada sob rigorosos padrões de engenharia aeroespacial:
-- **HAL (Hardware Abstraction Layer)**: Camada que permite o software rodar tanto em simulação pura quanto conectado a drones reais via MAVLink sem alteração de código.
-- **Protocolo MAVLink Industrial**: Suporte nativo ao padrão de comunicação da NASA/Pixhawk para controle de missão e telemetria GPS/Atitude.
-- **Telemetria Assíncrona 10Hz**: Processamento em tempo real com baixa latência via WebSockets.
-- **Health Diagnostics**: Monitoramento contínuo de IMU, CPU Load, GPS Fix e Integridade de Link exibidos diretamente no HUD.
+## 🛠️ Tech Stack
 
-## 🛠️ Stack Tecnológica
+- **Frontend**: React, Three.js (@react-three/fiber, @react-three/drei), Vite, Lucide React.
+- **Backend**: Python, FastAPI, WebSockets, MAVLink (PyMavlink).
+- **AI Engine**: Google Gemini 1.5 Flash API.
 
-- **Frontend**: React 18, Three.js, @react-three/fiber, Lucide React.
-- **Backend**: Python 3.13, FastAPI, WebSockets, PyMAVLink.
-- **Design**: Glassmorphism, Estética CRT/Cyberpunk.
+## 🚦 Getting Started
 
-## 🌐 Deploy no Render
+### Prerequisites
+- Python 3.10+
+- Node.js 18+
+- Google API Key (for Gemini reasoning)
 
-Para colocar este projeto online e impressionar no hackathon:
-1.  Conecte seu repositório GitHub ao **Render**.
-2.  O Render detectará automaticamente o arquivo `render.yaml`.
-3.  O sistema será buildado e servido em uma única URL (Ex: `seu-projeto.onrender.com`).
-4.  O Frontend será servido na rota `/app`.
+### Installation
+
+1. **Clone and Setup Backend**
+```bash
+pip install -r backend/requirements.txt
+set GOOGLE_API_KEY=your_key_here
+python backend/main.py
+```
+
+2. **Frontend Setup**
+```bash
+cd aigis-uav-system
+npm install
+npm run dev
+```
+
+## 🧠 AI Insight Examples
+- *"GEMINI-3 PRO ⚡ // THINKING: Humanoid heat signature detected. Probability 98%. Flagging Sector 2 as 'STABLE RESCUE'."*
+- *"GEMINI-1.5 // ALERT: CRITICAL POWER DEPLETION. PROTOCOL 412: EMERGENCY DESCENT INITIATED."*
+
+## 📜 Achievements Summary (LinkedIn Ready)
+Successfully developed **AIGIS**, an advanced AI-UAV Tactical Command System. 
+- Integrated **Google Gemini 3** for real-time mission reasoning.
+- Developed a high-performance **3D Radar Engine** using Three.js.
+- Implemented a robust **WebSocket-based Telemetry Link** for sub-100ms latency.
+- Created a **Military-grade HUD** for aerospace-level situational awareness.
 
 ---
 **Desenvolvido para Missões Críticas e Operações de Resgate.**
+
+<img width="1024" height="768" alt="image" src="https://github.com/user-attachments/assets/ac9be685-e2a6-430d-af0e-b6d17eb69706" />
+
+*Developed for Google DeepMind Gemini 3 Hackathon.*
+
+![alt text](image.png)

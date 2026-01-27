@@ -119,14 +119,12 @@ function App() {
         targets={telemetry.targets}
       />
 
-      <HUD
-        droneStatus={telemetry?.status || {}}
-        aiMessages={aiMessages}
-        position={telemetry?.position}
-        onInject={handleScenario}
-      />
+      <HUD telemetry={telemetry} />
 
-      <ControlPanel onCommand={handleCommand} />
+      <ControlPanel
+        onCommand={handleCommand}
+        onScenario={handleScenario}
+      />
 
       {/* Decorative Vignette */}
       <div style={{
