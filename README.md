@@ -17,7 +17,7 @@ AIGIS is a professional-grade UAV (Unmanned Aerial Vehicle) monitoring and contr
 
 - **Frontend**: React, Three.js (@react-three/fiber, @react-three/drei), Vite, Lucide React.
 - **Backend**: Python, FastAPI, WebSockets, MAVLink (PyMavlink).
-- **AI Engine**: Google Gemini 1.5 Flash API.
+- **AI Engine**: Google Gemini 3 Flash API.
 
 ## 🚦 Getting Started
 
