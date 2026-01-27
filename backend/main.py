@@ -22,7 +22,7 @@ class TacticalAIEngine:
     def __init__(self):
         self.enabled = GEN_API_KEY is not None
         if self.enabled:
-            self.model = genai.GenerativeModel('gemini-2.0-flash') # Using stable 2.0-flash confirmed in logs
+            self.model = genai.GenerativeModel('gemini-3-flash-preview') # Direct link to G3-FLASH confirmed in logs
             self.chat = self.model.start_chat()
             self.system_prompt = (
                 "You are AIGIS-AI, a tactical search and rescue drone operator assistant. "
