@@ -46,6 +46,26 @@ function App() {
     }
   }, []) // Connection is established only ONCE
 
+  const handleScenario = async (scenario) => {
+    try {
+      const apiBase = import.meta.env.DEV
+        ? 'http://localhost:8000/api'
+        : `${window.location.origin}/api`
+
+      await fetch(`${apiBase}/scenario/${scenario}`, { method: 'POST' })
+
+      const scenarioMsgs = {
+        'rescue': "SCENARIO_INJECT: Initiating Rescue Search Pattern.",
+        'emergency': "SCENARIO_INJECT: Warning - Simulated Power Plant Anomaly.",
+        'reset': "SCENARIO_INJECT: System Hardware Re-initialization."
+      }
+
+      setAiMessages(prev => [scenarioMsgs[scenario] || "SCENARIO_INJECT: Custom protocol.", ...prev].slice(0, 15))
+    } catch (err) {
+      console.error("Scenario injection failed", err)
+    }
+  }
+
   const handleCommand = async (command) => {
     try {
       const apiBase = import.meta.env.DEV
@@ -100,9 +120,10 @@ function App() {
       />
 
       <HUD
-        droneStatus={telemetry.status}
+        droneStatus={telemetry?.status || {}}
         aiMessages={aiMessages}
-        position={telemetry.position}
+        position={telemetry?.position}
+        onInject={handleScenario}
       />
 
       <ControlPanel onCommand={handleCommand} />

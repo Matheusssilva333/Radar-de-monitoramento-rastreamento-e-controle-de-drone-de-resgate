@@ -1,6 +1,6 @@
 import React, { useRef, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls, PerspectiveCamera, Grid, Float, Sphere, MeshDistortMaterial, Trail, Points, PointMaterial } from '@react-three/drei'
+import { OrbitControls, PerspectiveCamera, Grid, Float, Sphere, MeshDistortMaterial, Trail, Points, PointMaterial, Line, Html } from '@react-three/drei'
 import * as THREE from 'three'
 
 function Terrain() {
@@ -113,21 +113,42 @@ function Scene({ dronePosition, targets }) {
       {/* Detected Targets */}
       {targets.map((target) => (
         <group key={target.id} position={[target.x, -1.5, target.z]}>
-          <Sphere args={[0.2, 16, 16]}>
-            <meshBasicMaterial color={target.detected ? "#ff2e63" : "#444"} />
+          <Sphere args={[target.detected ? 0.3 : 0.15, 16, 16]}>
+            <meshBasicMaterial color={target.detected ? (target.priority === 'CRITICAL' ? "#ff0000" : "#ff2e63") : "#444"} transparent opacity={0.8} />
           </Sphere>
+
           {target.detected && (
             <>
               <pointLight color="#ff2e63" intensity={2} distance={5} />
+
+              {/* Tactical Connection Line */}
+              <Line
+                points={[[0, 0, 0], [dronePosition.x - target.x, (dronePosition.y / 20) + 1.5, dronePosition.z - target.z]]}
+                color="#ff2e63"
+                lineWidth={1}
+                transparent
+                opacity={0.3}
+              />
+
               <mesh rotation={[-Math.PI / 2, 0, 0]}>
-                <ringGeometry args={[0.4, 0.5, 32]} />
-                <MeshDistortMaterial
-                  color="#ff2e63"
-                  speed={5}
-                  distort={0.3}
-                  radius={1}
-                />
+                <ringGeometry args={[0.5, 0.7, 32]} />
+                <meshBasicMaterial color="#ff2e63" transparent opacity={0.2} />
               </mesh>
+
+              <Html position={[0, 1, 0]} center>
+                <div style={{
+                  background: 'rgba(255, 46, 99, 0.2)',
+                  border: '1px solid #ff2e63',
+                  color: 'white',
+                  padding: '2px 6px',
+                  fontSize: '0.6rem',
+                  fontFamily: 'JetBrains Mono',
+                  whiteSpace: 'nowrap',
+                  backdropFilter: 'blur(4px)'
+                }}>
+                  {target.type}: {target.priority}
+                </div>
+              </Html>
             </>
           )}
         </group>

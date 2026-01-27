@@ -1,7 +1,7 @@
 import React from 'react'
 import { Activity, Battery, Signal, Navigation, Shield, Zap, Wind, Ruler, Target } from 'lucide-react'
 
-export default function HUD({ droneStatus, aiMessages, position }) {
+export default function HUD({ droneStatus, aiMessages, position, onInject }) {
     return (
         <div className="hud-container" style={{
             position: 'absolute',
@@ -84,6 +84,21 @@ export default function HUD({ droneStatus, aiMessages, position }) {
                             </div>
                         ))}
                     </div>
+                    <div style={{ marginTop: '1rem', paddingTop: '0.8rem', borderTop: '1px solid var(--border)' }}>
+                        <StatusLine label="ENCRYPTION" value="AES-256" />
+                        <StatusLine label="AI_MODEL" value="GEMINI-3 PRO ⚡" />
+                        <StatusLine label="SAT_LINK" value="ACTIVE" color="var(--success)" />
+                    </div>
+
+                    {/* Interactive Scenarios for Performance Review */}
+                    <div style={{ marginTop: '1.5rem' }}>
+                        <div style={{ fontSize: '0.6rem', color: 'var(--primary)', opacity: 0.6, letterSpacing: '1.5px', marginBottom: '0.8rem' }}>INJECT MISSION SCENARIO</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                            <ScenarioBtn label="RESCUE SIM" action="rescue" color="var(--success)" onAction={onInject} />
+                            <ScenarioBtn label="POWER FAIL" action="emergency" color="var(--danger)" onAction={onInject} />
+                            <ScenarioBtn label="FULL RESET" action="reset" color="var(--primary)" onAction={onInject} />
+                        </div>
+                    </div>
                 </div>
 
                 <div className="glass-panel" style={{ padding: '1.2rem', width: '350px' }}>
@@ -122,5 +137,43 @@ function TelemetryItem({ icon, label, value }) {
             </div>
             <span style={{ fontSize: '1.4rem', fontWeight: '700', color: 'white', fontFamily: 'JetBrains Mono' }}>{value}</span>
         </div>
+    )
+}
+
+function StatusLine({ label, value, color }) {
+    return (
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', marginBottom: '4px' }}>
+            <span style={{ opacity: 0.4 }}>{label}</span>
+            <span style={{ color: color || 'var(--primary)', fontWeight: 'bold' }}>{value}</span>
+        </div>
+    )
+}
+
+function ScenarioBtn({ label, action, color, onAction }) {
+    return (
+        <button
+            onClick={() => onAction(action)}
+            style={{
+                background: 'rgba(0,0,0,0.3)',
+                border: `1px solid ${color}44`,
+                color: color,
+                fontSize: '0.55rem',
+                padding: '6px',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                fontWeight: 'bold'
+            }}
+            onMouseEnter={(e) => {
+                e.currentTarget.style.background = `${color}22`
+                e.currentTarget.style.borderColor = color
+            }}
+            onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(0,0,0,0.3)'
+                e.currentTarget.style.borderColor = `${color}44`
+            }}
+        >
+            {label}
+        </button>
     )
 }
