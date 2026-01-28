@@ -7,22 +7,7 @@ import './App.css'
 function SystemLogs({ logs }) {
   if (!logs || logs.length === 0) return null
   return (
-    <div style={{
-      position: 'absolute',
-      bottom: '180px', // Above controls
-      left: '20px',
-      width: '300px',
-      maxHeight: '150px',
-      overflowY: 'auto',
-      background: 'rgba(0, 0, 0, 0.7)',
-      border: '1px solid var(--border)',
-      padding: '10px',
-      color: '#00ff44',
-      fontFamily: 'monospace',
-      fontSize: '0.7rem',
-      zIndex: 40,
-      pointerEvents: 'none'
-    }}>
+    <div className="system-logs-overlay">
       <div style={{ borderBottom: '1px solid #333', marginBottom: '5px', fontWeight: 'bold' }}>SYSTEM LOGS</div>
       {logs.slice(0, 8).map((log, i) => (
         <div key={i} style={{ opacity: 1 - (i * 0.1) }}>{log}</div>

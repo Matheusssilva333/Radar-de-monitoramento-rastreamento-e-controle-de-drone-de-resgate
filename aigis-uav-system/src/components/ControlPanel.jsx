@@ -100,8 +100,7 @@ export default function ControlPanel({ onCommand, onScenario, isRoboticEnabled, 
                         onClick={onToggleRobotic}
                         title="TOGGLE DIRECT CONTROL"
                     >
-                        <loader className={isRoboticEnabled ? 'animate-pulse' : ''} size={16} />
-                        <Zap size={16} color={isRoboticEnabled ? "var(--success)" : "currentColor"} />
+                        <Zap size={16} className={isRoboticEnabled ? "animate-pulse" : ""} color={isRoboticEnabled ? "var(--success)" : "currentColor"} />
                     </button>
                     <button className="settings-btn">
                         <Settings size={16} />
